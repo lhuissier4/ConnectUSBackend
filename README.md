@@ -16,6 +16,8 @@ Pour lancer le projet, executez :
 npm start
 ```
 
+### Comptes insérés
+Leurs mot de passe hashé est password
 
 story telling
 
