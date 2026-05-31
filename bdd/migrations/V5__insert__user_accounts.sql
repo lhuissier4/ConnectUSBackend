@@ -10,24 +10,3 @@ VALUES
   ('Emma',    'Bernard', 'emma.bernard@connectus.fr',   '$2b$12$Y3XI15018OxRUsAuPdTcsu7Hyh4xdy327RKUOp51uOzyLd505flh2', '0605050505', 'STUDENT', 'Computer Science',     'M1'),
   ('Florian', 'Petit',   'florian.petit@connectus.fr',  '$2b$12$Y3XI15018OxRUsAuPdTcsu7Hyh4xdy327RKUOp51uOzyLd505flh2', '0606060606', 'STUDENT', 'Computer Science',     'I3');
 
--- Grant admin access to Alice (granted by Bob)
-INSERT INTO account_admin_accesses (account_id, granted_by)
-SELECT
-  alice.id,
-  bob.id
-FROM
-  user_accounts alice,
-  user_accounts bob
-WHERE alice.email = 'alice.martin@connectus.fr'
-  AND bob.email   = 'bob.dupont@connectus.fr';
-
--- Grant admin access to Bob (granted by Alice)
-INSERT INTO account_admin_accesses (account_id, granted_by)
-SELECT
-  bob.id,
-  alice.id
-FROM
-  user_accounts bob,
-  user_accounts alice
-WHERE bob.email   = 'bob.dupont@connectus.fr'
-  AND alice.email = 'alice.martin@connectus.fr';
