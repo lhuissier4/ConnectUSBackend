@@ -1,0 +1,24 @@
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import type { IUserRepository } from '../ports/user.repository.port';
+import { USER_REPOSITORY_PORT } from '../ports/user.repository.port';
+import type { UserEntity } from '../user.entity';
+
+@Injectable()
+export class GetUserByIdUseCase {
+  constructor(
+    @Inject(USER_REPOSITORY_PORT)
+    private readonly userRepository: IUserRepository,
+  ) {}
+
+  async execute(id: number): Promise<UserEntity> {
+    const user = await this.userRepository.findById(id);
+
+    if (!user) {
+      throw new NotFoundException(
+        `Aucun utilisateur trouvé avec l'identifiant ${id}.`,
+      );
+    }
+
+    return user;
+  }
+}

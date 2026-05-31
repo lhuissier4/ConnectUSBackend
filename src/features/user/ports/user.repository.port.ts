@@ -1,0 +1,29 @@
+import { UserEntity } from '../user.entity';
+import { AccountStatus, StudentClass } from '../user.entity';
+
+export interface CreateUserPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  passwordHash: string;
+  status: AccountStatus;
+  isAdmin: boolean;
+  phoneNumber?: string;
+  photoUrl?: string;
+  rgpdPreferences?: Record<string, unknown>;
+  currentCourse?: string;
+  studentClass?: StudentClass;
+}
+
+export interface IUserRepository {
+  findById(id: number): Promise<UserEntity | null>;
+  findByName(firstName: string, lastName: string): Promise<UserEntity[]>;
+  create(
+    payload: CreateUserPayload,
+    requestingUserId: number,
+  ): Promise<UserEntity>;
+  delete(id: number): Promise<void>;
+  isAdmin(userId: number): Promise<boolean>;
+}
+
+export const USER_REPOSITORY_PORT = Symbol('IUserRepository');
