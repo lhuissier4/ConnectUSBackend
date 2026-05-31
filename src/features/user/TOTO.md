@@ -1,0 +1,4 @@
+- Voir comment gérer les préférences utilisateur en termes de REPG (un TODO migration)
+- Ajourner la connexion via une route/login et un token
+- Gérer le hash lors de la création d'un utilisateur
+- Justifier le choix d'API NestJS plutôt que fastapi ? (Alfred tourne sur FastAPI)
