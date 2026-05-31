@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserPayload } from '../domain/ports/output/user.repository.port';
-import { CreateUserDto } from './dto/create-user.dto';
+import { InputUserCommand } from '../domain/ports/input.user.command';
 import { CreateUserUseCase } from '../domain/use-cases/create-user.usecase';
 import { DeleteUserUseCase } from '../domain/use-cases/delete-user.usecase';
 import { GetUserByIdUseCase } from '../domain/use-cases/get-user-by-id.usecase';
 import { GetUserByNameUseCase } from '../domain/use-cases/get-user-by-name.usecase';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UserService {
@@ -24,7 +24,8 @@ export class UserService {
   }
 
   createUser(dto: CreateUserDto, requestingUserId: number) {
-    const payload: CreateUserPayload = {
+    // L'adaptateur d'entrée traduit le DTO HTTP vers le port d'entrée du domaine.
+    const command: InputUserCommand = {
       firstName: dto.firstName,
       lastName: dto.lastName,
       email: dto.email,
@@ -37,7 +38,7 @@ export class UserService {
       currentCourse: dto.currentCourse,
       studentClass: dto.studentClass,
     };
-    return this.createUserUseCase.execute(payload, requestingUserId);
+    return this.createUserUseCase.execute(command, requestingUserId);
   }
 
   deleteUser(id: number, requestingUserId: number) {

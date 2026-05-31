@@ -1,6 +1,6 @@
-import { NotFoundException } from '@nestjs/common';
 import { AccountStatus, UserEntity } from '../entities/user.entity';
-import { IUserRepository } from '../ports/output/user.repository.port';
+import { UserNotFoundException } from '../exceptions/user-not-found.exception';
+import { IUserRepository } from '../ports/output.user.repository.port';
 import { GetUserByIdUseCase } from './get-user-by-id.usecase';
 
 const makeUserEntity = (): UserEntity =>
@@ -34,9 +34,9 @@ describe('GetUserByIdUseCase', () => {
     expect(repository.findById).toHaveBeenCalledWith(1);
   });
 
-  it("lève NotFoundException si l'utilisateur n'existe pas", async () => {
+  it("lève UserNotFoundException si l'utilisateur n'existe pas", async () => {
     repository.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(999)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(999)).rejects.toThrow(UserNotFoundException);
   });
 });

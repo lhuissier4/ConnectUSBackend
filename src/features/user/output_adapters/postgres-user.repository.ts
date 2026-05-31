@@ -4,7 +4,7 @@ import { IsNull, Repository } from 'typeorm';
 import {
   CreateUserPayload,
   IUserRepository,
-} from '../domain/ports/output/user.repository.port';
+} from '../domain/ports/output.user.repository.port';
 import { UserEntity } from '../domain/entities/user.entity';
 import { AccountAdminAccessOrmEntity } from './orm/account-admin-access.orm-entity';
 import { UserAccountOrmEntity } from './orm/user-account.orm-entity';
@@ -32,14 +32,12 @@ export class PostgresUserRepository implements IUserRepository {
       .andWhere('LOWER(u.lastName) = LOWER(:lastName)', { lastName })
       .getMany();
 
-    const entities = await Promise.all(
+    return Promise.all(
       rows.map(async (row) => {
         const isAdmin = await this.isAdmin(Number(row.id));
         return this.toEntity(row, isAdmin);
       }),
     );
-
-    return entities;
   }
 
   async create(

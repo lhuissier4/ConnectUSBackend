@@ -1,9 +1,11 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InsufficientPermissionsException } from '../exceptions/insufficient-permissions.exception';
+import type { InputUserCommand } from '../ports/input.user.command';
 import type {
   CreateUserPayload,
   IUserRepository,
-} from '../ports/output/user.repository.port';
-import { USER_REPOSITORY_PORT } from '../ports/output/user.repository.port';
+} from '../ports/output.user.repository.port';
+import { USER_REPOSITORY_PORT } from '../ports/output.user.repository.port';
 import type { UserEntity } from '../entities/user.entity';
 
 @Injectable()
@@ -13,29 +15,35 @@ export class CreateUserUseCase {
     private readonly userRepository: IUserRepository,
   ) {}
 
-  /**
-   * Crée un nouvel utilisateur.
-   *
-   * @param payload          - Les données du nouvel utilisateur.
-   *                           Le champ `isAdmin` (boolean) indique si le compte doit
-   *                           bénéficier de droits administrateur.
-   * @param requestingUserId - L'identifiant de l'utilisateur effectuant la demande.
-   *                           Doit être admin si `payload.isAdmin` est true.
-   */
   async execute(
-    payload: CreateUserPayload,
+    command: InputUserCommand,
     requestingUserId: number,
   ): Promise<UserEntity> {
-    if (payload.isAdmin) {
+    if (command.isAdmin) {
       const requesterIsAdmin =
         await this.userRepository.isAdmin(requestingUserId);
 
       if (!requesterIsAdmin) {
-        throw new ForbiddenException(
+        throw new InsufficientPermissionsException(
           'Seul un administrateur peut créer un compte avec des droits administrateur.',
         );
       }
     }
+
+    // Traduction du port d'entrée (command) vers le port de sortie (payload).
+    const payload: CreateUserPayload = {
+      firstName: command.firstName,
+      lastName: command.lastName,
+      email: command.email,
+      passwordHash: command.passwordHash,
+      status: command.status,
+      isAdmin: command.isAdmin,
+      phoneNumber: command.phoneNumber,
+      photoUrl: command.photoUrl,
+      rgpdPreferences: command.rgpdPreferences,
+      currentCourse: command.currentCourse,
+      studentClass: command.studentClass,
+    };
 
     return this.userRepository.create(payload, requestingUserId);
   }

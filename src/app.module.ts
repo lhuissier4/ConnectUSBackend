@@ -4,9 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { resolve } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AccountAdminAccessOrmEntity } from './features/user/output_adapters/orm/account-admin-access.orm-entity';
-import { UserAccountOrmEntity } from './features/user/output_adapters/orm/user-account.orm-entity';
-import { UserModule } from './features/user/input_adapters/user.module';
+import { UserModule } from './features/user/user.module';
 
 @Module({
   imports: [
@@ -24,7 +22,7 @@ import { UserModule } from './features/user/input_adapters/user.module';
         username: config.get<string>('POSTGRES_USER'),
         password: config.get<string>('POSTGRES_PASSWORD'),
         database: config.get<string>('POSTGRES_DB'),
-        entities: [UserAccountOrmEntity, AccountAdminAccessOrmEntity],
+        autoLoadEntities: true,
         synchronize: false,
       }),
     }),

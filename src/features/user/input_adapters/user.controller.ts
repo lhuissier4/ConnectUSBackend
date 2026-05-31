@@ -8,10 +8,13 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  UseFilters,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserExceptionFilter } from './filters/user-exception.filter';
 import { UserService } from './user.service';
 
+@UseFilters(new UserExceptionFilter())
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}

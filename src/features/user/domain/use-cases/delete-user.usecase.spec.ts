@@ -1,6 +1,7 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { AccountStatus, UserEntity } from '../entities/user.entity';
-import { IUserRepository } from '../ports/output/user.repository.port';
+import { InsufficientPermissionsException } from '../exceptions/insufficient-permissions.exception';
+import { UserNotFoundException } from '../exceptions/user-not-found.exception';
+import { IUserRepository } from '../ports/output.user.repository.port';
 import { DeleteUserUseCase } from './delete-user.usecase';
 
 const makeUserEntity = (): UserEntity =>
@@ -24,19 +25,19 @@ describe('DeleteUserUseCase', () => {
     useCase = new DeleteUserUseCase(repository);
   });
 
-  it("lève ForbiddenException si le demandeur n'est pas admin", async () => {
+  it("lève InsufficientPermissionsException si le demandeur n'est pas admin", async () => {
     repository.isAdmin.mockResolvedValue(false);
 
-    await expect(useCase.execute(5, 99)).rejects.toThrow(ForbiddenException);
+    await expect(useCase.execute(5, 99)).rejects.toThrow(InsufficientPermissionsException);
     expect(repository.findById).not.toHaveBeenCalled();
     expect(repository.delete).not.toHaveBeenCalled();
   });
 
-  it("lève NotFoundException si l'utilisateur cible n'existe pas", async () => {
+  it("lève UserNotFoundException si l'utilisateur cible n'existe pas", async () => {
     repository.isAdmin.mockResolvedValue(true);
     repository.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(999, 1)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(999, 1)).rejects.toThrow(UserNotFoundException);
     expect(repository.delete).not.toHaveBeenCalled();
   });
 

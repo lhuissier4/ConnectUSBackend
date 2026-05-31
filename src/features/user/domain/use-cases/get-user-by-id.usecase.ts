@@ -1,6 +1,7 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import type { IUserRepository } from '../ports/output/user.repository.port';
-import { USER_REPOSITORY_PORT } from '../ports/output/user.repository.port';
+import { Inject, Injectable } from '@nestjs/common';
+import { UserNotFoundException } from '../exceptions/user-not-found.exception';
+import type { IUserRepository } from '../ports/output.user.repository.port';
+import { USER_REPOSITORY_PORT } from '../ports/output.user.repository.port';
 import type { UserEntity } from '../entities/user.entity';
 
 @Injectable()
@@ -14,9 +15,7 @@ export class GetUserByIdUseCase {
     const user = await this.userRepository.findById(id);
 
     if (!user) {
-      throw new NotFoundException(
-        `Aucun utilisateur trouvé avec l'identifiant ${id}.`,
-      );
+      throw new UserNotFoundException(id);
     }
 
     return user;

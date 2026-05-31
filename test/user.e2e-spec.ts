@@ -3,12 +3,12 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AccountStatus, UserEntity } from '../src/features/user/domain/entities/user.entity';
-import { USER_REPOSITORY_PORT } from '../src/features/user/domain/ports/output/user.repository.port';
+import { USER_REPOSITORY_PORT } from '../src/features/user/domain/ports/output.user.repository.port';
 import { CreateUserUseCase } from '../src/features/user/domain/use-cases/create-user.usecase';
 import { DeleteUserUseCase } from '../src/features/user/domain/use-cases/delete-user.usecase';
 import { GetUserByIdUseCase } from '../src/features/user/domain/use-cases/get-user-by-id.usecase';
 import { GetUserByNameUseCase } from '../src/features/user/domain/use-cases/get-user-by-name.usecase';
-import { UserController } from '../src/features/user/input_adapters/user.controller.js';
+import { UserController } from '../src/features/user/input_adapters/user.controller';
 import { UserService } from '../src/features/user/input_adapters/user.service';
 
 const makeUserEntity = (overrides: Partial<{ id: number; isAdmin: boolean }> = {}): UserEntity =>

@@ -1,6 +1,10 @@
-import { UserEntity } from '../../entities/user.entity';
-import { AccountStatus, StudentClass } from '../../entities/user.entity';
+import { AccountStatus, StudentClass, UserEntity } from '../entities/user.entity';
 
+/**
+ * Port de sortie : données nécessaires à la persistance d'un nouvel utilisateur.
+ * Contrat propre à l'infrastructure, distinct du port d'entrée
+ * (`InputUserCommand`).
+ */
 export interface CreateUserPayload {
   firstName: string;
   lastName: string;

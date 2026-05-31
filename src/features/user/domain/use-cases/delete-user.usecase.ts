@@ -1,11 +1,8 @@
-import {
-  ForbiddenException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import type { IUserRepository } from '../ports/output/user.repository.port';
-import { USER_REPOSITORY_PORT } from '../ports/output/user.repository.port';
+import { Inject, Injectable } from '@nestjs/common';
+import { InsufficientPermissionsException } from '../exceptions/insufficient-permissions.exception';
+import { UserNotFoundException } from '../exceptions/user-not-found.exception';
+import type { IUserRepository } from '../ports/output.user.repository.port';
+import { USER_REPOSITORY_PORT } from '../ports/output.user.repository.port';
 
 @Injectable()
 export class DeleteUserUseCase {
@@ -14,19 +11,11 @@ export class DeleteUserUseCase {
     private readonly userRepository: IUserRepository,
   ) {}
 
-  /**
-   * Supprime un utilisateur par son identifiant.
-   * Seul un administrateur peut effectuer cette action.
-   *
-   * @param id               - L'identifiant de l'utilisateur à supprimer.
-   * @param requestingUserId - L'identifiant de l'utilisateur effectuant la demande.
-   */
   async execute(id: number, requestingUserId: number): Promise<void> {
-    const requesterIsAdmin =
-      await this.userRepository.isAdmin(requestingUserId);
+    const requesterIsAdmin = await this.userRepository.isAdmin(requestingUserId);
 
     if (!requesterIsAdmin) {
-      throw new ForbiddenException(
+      throw new InsufficientPermissionsException(
         'Seul un administrateur peut supprimer un compte utilisateur.',
       );
     }
@@ -34,9 +23,7 @@ export class DeleteUserUseCase {
     const user = await this.userRepository.findById(id);
 
     if (!user) {
-      throw new NotFoundException(
-        `Aucun utilisateur trouvé avec l'identifiant ${id}.`,
-      );
+      throw new UserNotFoundException(id);
     }
 
     await this.userRepository.delete(id);
