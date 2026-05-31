@@ -2,9 +2,9 @@ import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import type {
   CreateUserPayload,
   IUserRepository,
-} from '../ports/user.repository.port';
-import { USER_REPOSITORY_PORT } from '../ports/user.repository.port';
-import type { UserEntity } from '../user.entity';
+} from '../ports/output/user.repository.port';
+import { USER_REPOSITORY_PORT } from '../ports/output/user.repository.port';
+import type { UserEntity } from '../entities/user.entity';
 
 @Injectable()
 export class CreateUserUseCase {

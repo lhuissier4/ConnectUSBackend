@@ -1,5 +1,5 @@
-import { UserEntity } from '../user.entity';
-import { AccountStatus, StudentClass } from '../user.entity';
+import { UserEntity } from '../../entities/user.entity';
+import { AccountStatus, StudentClass } from '../../entities/user.entity';
 
 export interface CreateUserPayload {
   firstName: string;

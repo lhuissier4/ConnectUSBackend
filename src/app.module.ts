@@ -4,9 +4,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { resolve } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AccountAdminAccessOrmEntity } from './features/user/adapters/orm/account-admin-access.orm-entity';
-import { UserAccountOrmEntity } from './features/user/adapters/orm/user-account.orm-entity';
-import { UserModule } from './users/user.module';
+import { AccountAdminAccessOrmEntity } from './features/user/output_adapters/orm/account-admin-access.orm-entity';
+import { UserAccountOrmEntity } from './features/user/output_adapters/orm/user-account.orm-entity';
+import { UserModule } from './features/user/input_adapters/user.module';
 
 @Module({
   imports: [

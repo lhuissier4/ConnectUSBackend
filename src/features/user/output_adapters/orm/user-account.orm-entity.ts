@@ -5,7 +5,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { AccountStatus, StudentClass } from '../../user.entity';
+import { AccountStatus, StudentClass } from '../../domain/entities/user.entity';
 
 @Entity('user_accounts')
 export class UserAccountOrmEntity {
@@ -40,7 +40,12 @@ export class UserAccountOrmEntity {
   })
   status: AccountStatus;
 
-  @Column({ name: 'current_course', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'current_course',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   currentCourse: string | null;
 
   @Column({

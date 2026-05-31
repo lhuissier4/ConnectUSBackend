@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { type CreateUserPayload } from '../features/user/ports/user.repository.port';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UserService } from './user.service';
 
 @Controller('users')
@@ -31,10 +31,10 @@ export class UserController {
 
   @Post()
   createUser(
-    @Body() payload: CreateUserPayload,
+    @Body() dto: CreateUserDto,
     @Headers('x-requesting-user-id') requestingUserId: string,
   ) {
-    return this.userService.createUser(payload, Number(requestingUserId));
+    return this.userService.createUser(dto, Number(requestingUserId));
   }
 
   @Delete(':id')

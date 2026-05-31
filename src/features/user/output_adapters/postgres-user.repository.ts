@@ -4,8 +4,8 @@ import { IsNull, Repository } from 'typeorm';
 import {
   CreateUserPayload,
   IUserRepository,
-} from '../ports/user.repository.port';
-import { UserEntity } from '../user.entity';
+} from '../domain/ports/output/user.repository.port';
+import { UserEntity } from '../domain/entities/user.entity';
 import { AccountAdminAccessOrmEntity } from './orm/account-admin-access.orm-entity';
 import { UserAccountOrmEntity } from './orm/user-account.orm-entity';
 
