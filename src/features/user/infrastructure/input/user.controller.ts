@@ -10,7 +10,7 @@ import {
   Query,
   UseFilters,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { UserDto } from '../../application/dto/user.dto';
 import { UserExceptionFilter } from './filters/user-exception.filter';
 import { UserService } from './user.service';
 
@@ -34,7 +34,7 @@ export class UserController {
 
   @Post()
   createUser(
-    @Body() dto: CreateUserDto,
+    @Body() dto: UserDto,
     @Headers('x-requesting-user-id') requestingUserId: string,
   ) {
     return this.userService.createUser(dto, Number(requestingUserId));

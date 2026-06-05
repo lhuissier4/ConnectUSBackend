@@ -1,10 +1,11 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { IsNull } from 'typeorm';
-import { AccountStatus } from '../domain/entities/user.entity';
 import { AccountAdminAccessOrmEntity } from './orm/account-admin-access.orm-entity';
 import { UserAccountOrmEntity } from './orm/user-account.orm-entity';
 import { PostgresUserRepository } from './postgres-user.repository';
+import { AccountStatus } from '../../domain/entities/account-status.enum';
+import { UserEntity } from '../../domain/entities/user.entity';
 
 const makeOrmRow = (overrides: Partial<UserAccountOrmEntity> = {}): UserAccountOrmEntity =>
   Object.assign(new UserAccountOrmEntity(), {
@@ -87,7 +88,6 @@ describe('PostgresUserRepository (TI)', () => {
       const result = await repo.findById(1);
 
       expect(result).not.toBeNull();
-      expect(result!.id).toBe(1);
       expect(result!.isAdmin).toBe(true);
       expect(result!.email).toBe('jean@epsi.fr');
     });
@@ -112,12 +112,11 @@ describe('PostgresUserRepository (TI)', () => {
       userRepo.save.mockResolvedValue(row);
       adminRepo.findOne.mockResolvedValue(null);
 
-      const payload = {
-        firstName: 'Jean', lastName: 'Dupont', email: 'jean@epsi.fr',
-        passwordHash: 'hash', status: AccountStatus.TEACHER, isAdmin: false,
-      };
+      const user = new UserEntity(
+        'Jean', 'Dupont', 'jean@epsi.fr', 'hash', AccountStatus.TEACHER, false,
+      );
 
-      const result = await repo.create(payload, 1);
+      const result = await repo.create(user);
 
       expect(userRepo.save).toHaveBeenCalled();
       expect(adminRepo.create).not.toHaveBeenCalled();
@@ -131,12 +130,11 @@ describe('PostgresUserRepository (TI)', () => {
       adminRepo.create.mockReturnValue(makeAdminAccess());
       adminRepo.save.mockResolvedValue(makeAdminAccess());
 
-      const payload = {
-        firstName: 'Jean', lastName: 'Dupont', email: 'jean@epsi.fr',
-        passwordHash: 'hash', status: AccountStatus.TEACHER, isAdmin: true,
-      };
+      const user = new UserEntity(
+        'Jean', 'Dupont', 'jean@epsi.fr', 'hash', AccountStatus.TEACHER, true,
+      );
 
-      await repo.create(payload, 1);
+      await repo.create(user);
 
       expect(adminRepo.create).toHaveBeenCalled();
       expect(adminRepo.save).toHaveBeenCalled();

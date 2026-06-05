@@ -1,28 +1,29 @@
-import { AccountStatus, StudentClass, UserEntity } from './user.entity';
+import { UserEntity } from './user.entity';
+import { AccountStatus } from './account-status.enum';
+import { StudentClass } from './student-class.enum';
 
-const makeUser = (overrides: Partial<{
-  firstName: string;
-  lastName: string;
-  email: string;
-  status: AccountStatus;
-  studentClass?: StudentClass;
-}> = {}): UserEntity => {
-  const status = overrides.status ?? AccountStatus.TEACHER;
+const makeUser = (
+  overrides: Partial<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    statusInSchool: AccountStatus;
+    studentClass?: StudentClass;
+  }> = {},
+): UserEntity => {
+  const statusInSchool = overrides.statusInSchool ?? AccountStatus.TEACHER;
   const studentClass =
-    status === AccountStatus.STUDENT
+    statusInSchool === AccountStatus.STUDENT
       ? (overrides.studentClass ?? StudentClass.M1)
       : overrides.studentClass;
 
   return new UserEntity(
-    1,
     overrides.firstName ?? 'Jean',
     overrides.lastName ?? 'Dupont',
     overrides.email ?? 'jean@epsi.fr',
     'hash',
-    status,
+    statusInSchool,
     false,
-    new Date(),
-    new Date(),
     undefined,
     undefined,
     undefined,
@@ -34,17 +35,17 @@ const makeUser = (overrides: Partial<{
 describe('UserEntity', () => {
   describe('construction valide', () => {
     it('crée un TEACHER sans studentClass', () => {
-      expect(() => makeUser({ status: AccountStatus.TEACHER })).not.toThrow();
+      expect(() => makeUser({ statusInSchool: AccountStatus.TEACHER })).not.toThrow();
     });
 
     it('crée un STUDENT avec studentClass', () => {
       expect(() =>
-        makeUser({ status: AccountStatus.STUDENT, studentClass: StudentClass.M1 }),
+        makeUser({ statusInSchool: AccountStatus.STUDENT, studentClass: StudentClass.M1 }),
       ).not.toThrow();
     });
 
     it('crée un ALUMNI sans studentClass', () => {
-      expect(() => makeUser({ status: AccountStatus.ALUMNI })).not.toThrow();
+      expect(() => makeUser({ statusInSchool: AccountStatus.ALUMNI })).not.toThrow();
     });
   });
 
@@ -71,8 +72,12 @@ describe('UserEntity', () => {
       expect(
         () =>
           new UserEntity(
-            1, 'Jean', 'Dupont', 'jean@epsi.fr', 'hash',
-            AccountStatus.STUDENT, false, new Date(), new Date(),
+            'Jean',
+            'Dupont',
+            'jean@epsi.fr',
+            'hash',
+            AccountStatus.STUDENT,
+            false,
           ),
       ).toThrow('La classe est obligatoire pour un étudiant.');
     });
@@ -81,9 +86,17 @@ describe('UserEntity', () => {
       expect(
         () =>
           new UserEntity(
-            1, 'Jean', 'Dupont', 'jean@epsi.fr', 'hash',
-            AccountStatus.TEACHER, false, new Date(), new Date(),
-            undefined, undefined, undefined, undefined, StudentClass.M1,
+            'Jean',
+            'Dupont',
+            'jean@epsi.fr',
+            'hash',
+            AccountStatus.TEACHER,
+            false,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            StudentClass.M1,
           ),
       ).toThrow('La classe ne doit pas être renseignée pour un non-étudiant.');
     });

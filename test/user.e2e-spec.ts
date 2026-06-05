@@ -2,23 +2,26 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { AccountStatus, UserEntity } from '../src/features/user/domain/entities/user.entity';
-import { USER_REPOSITORY_PORT } from '../src/features/user/domain/ports/output.user.repository.port';
-import { CreateUserUseCase } from '../src/features/user/domain/use-cases/create-user.usecase';
-import { DeleteUserUseCase } from '../src/features/user/domain/use-cases/delete-user.usecase';
-import { GetUserByIdUseCase } from '../src/features/user/domain/use-cases/get-user-by-id.usecase';
-import { GetUserByNameUseCase } from '../src/features/user/domain/use-cases/get-user-by-name.usecase';
-import { UserController } from '../src/features/user/input_adapters/user.controller';
-import { UserService } from '../src/features/user/input_adapters/user.service';
+import { UserEntity } from '../src/features/user/domain/entities/user.entity';
+import { USER_REPOSITORY_PORT } from '../src/features/user/application/ports/user.repository.port';
+import { CreateUserUseCase } from '../src/features/user/application/use-cases/create-user.usecase';
+import { DeleteUserUseCase } from '../src/features/user/application/use-cases/delete-user.usecase';
+import { GetUserByIdUseCase } from '../src/features/user/application/use-cases/get-user-by-id.usecase';
+import { GetUserByNameUseCase } from '../src/features/user/application/use-cases/get-user-by-name.usecase';
+import { UserController } from '../src/features/user/infrastructure/input/user.controller';
+import { UserService } from '../src/features/user/infrastructure/input/user.service';
+import { AccountStatus } from '../src/features/user/domain/entities/account-status.enum';
 
-const makeUserEntity = (overrides: Partial<{ id: number; isAdmin: boolean }> = {}): UserEntity =>
+const makeUserEntity = (
+  overrides: Partial<{ isAdmin: boolean }> = {},
+): UserEntity =>
   new UserEntity(
-    overrides.id ?? 1,
-    'Jean', 'Dupont', 'jean@epsi.fr', 'hash',
+    'Jean',
+    'Dupont',
+    'jean@epsi.fr',
+    'hash',
     AccountStatus.TEACHER,
     overrides.isAdmin ?? false,
-    new Date('2024-01-01'),
-    new Date('2024-01-01'),
   );
 
 describe('UserController (TA)', () => {
@@ -83,13 +86,13 @@ describe('UserController (TA)', () => {
 
   describe('GET /users/:id', () => {
     it("200 - retourne l'utilisateur", async () => {
-      mockRepository.findById.mockResolvedValue(makeUserEntity({ id: 1 }));
+      mockRepository.findById.mockResolvedValue(makeUserEntity());
 
       await request(app.getHttpServer())
         .get('/users/1')
         .expect(200)
         .expect((res) => {
-          expect(res.body.id).toBe(1);
+          expect(res.body.email).toBe('jean@epsi.fr');
         });
     });
 
@@ -112,7 +115,7 @@ describe('UserController (TA)', () => {
       lastName: 'Dupont',
       email: 'jean@epsi.fr',
       passwordHash: 'hashed',
-      status: AccountStatus.TEACHER,
+      statusInSchool: AccountStatus.TEACHER,
       isAdmin: false,
     };
 
@@ -139,7 +142,7 @@ describe('UserController (TA)', () => {
       await request(app.getHttpServer())
         .post('/users')
         .set('x-requesting-user-id', '1')
-        .send({ ...validPayload, status: AccountStatus.STUDENT })
+        .send({ ...validPayload, statusInSchool: AccountStatus.STUDENT })
         .expect(400);
     });
 
@@ -178,7 +181,7 @@ describe('UserController (TA)', () => {
   describe('DELETE /users/:id', () => {
     it("200 - supprime l'utilisateur", async () => {
       mockRepository.isAdmin.mockResolvedValue(true);
-      mockRepository.findById.mockResolvedValue(makeUserEntity({ id: 5 }));
+      mockRepository.findById.mockResolvedValue(makeUserEntity());
       mockRepository.delete.mockResolvedValue(undefined);
 
       await request(app.getHttpServer())

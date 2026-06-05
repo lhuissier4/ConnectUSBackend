@@ -1,13 +1,11 @@
-import { AccountStatus, UserEntity } from '../entities/user.entity';
-import { UserNotFoundException } from '../exceptions/user-not-found.exception';
-import { IUserRepository } from '../ports/output.user.repository.port';
+import { UserEntity } from '../../domain/entities/user.entity';
+import { AccountStatus } from '../../domain/entities/account-status.enum';
+import { UserNotFoundException } from '../../domain/exceptions/user-not-found.exception';
+import { IUserRepository } from '../ports/user.repository.port';
 import { GetUserByIdUseCase } from './get-user-by-id.usecase';
 
 const makeUserEntity = (): UserEntity =>
-  new UserEntity(
-    1, 'Jean', 'Dupont', 'jean@epsi.fr', 'hash',
-    AccountStatus.TEACHER, false, new Date(), new Date(),
-  );
+  new UserEntity('Jean', 'Dupont', 'jean@epsi.fr', 'hash', AccountStatus.TEACHER, false);
 
 describe('GetUserByIdUseCase', () => {
   let useCase: GetUserByIdUseCase;

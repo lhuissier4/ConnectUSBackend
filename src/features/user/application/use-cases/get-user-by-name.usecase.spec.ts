@@ -1,13 +1,11 @@
-import { AccountStatus, UserEntity } from '../entities/user.entity';
-import { UserNotFoundException } from '../exceptions/user-not-found.exception';
-import { IUserRepository } from '../ports/output.user.repository.port';
+import { UserEntity } from '../../domain/entities/user.entity';
+import { AccountStatus } from '../../domain/entities/account-status.enum';
+import { UserNotFoundException } from '../../domain/exceptions/user-not-found.exception';
+import { IUserRepository } from '../ports/user.repository.port';
 import { GetUserByNameUseCase } from './get-user-by-name.usecase';
 
-const makeUserEntity = (id = 1): UserEntity =>
-  new UserEntity(
-    id, 'Jean', 'Dupont', `jean${id}@epsi.fr`, 'hash',
-    AccountStatus.TEACHER, false, new Date(), new Date(),
-  );
+const makeUserEntity = (suffix = '1'): UserEntity =>
+  new UserEntity('Jean', 'Dupont', `jean${suffix}@epsi.fr`, 'hash', AccountStatus.TEACHER, false);
 
 describe('GetUserByNameUseCase', () => {
   let useCase: GetUserByNameUseCase;
@@ -25,7 +23,7 @@ describe('GetUserByNameUseCase', () => {
   });
 
   it('retourne la liste des utilisateurs trouvés', async () => {
-    const users = [makeUserEntity(1), makeUserEntity(2)];
+    const users = [makeUserEntity('1'), makeUserEntity('2')];
     repository.findByName.mockResolvedValue(users);
 
     const result = await useCase.execute('Jean', 'Dupont');

@@ -1,7 +1,12 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpStatus,
+} from '@nestjs/common';
 import { Response } from 'express';
-import { InsufficientPermissionsException } from '../../domain/exceptions/insufficient-permissions.exception';
-import { UserNotFoundException } from '../../domain/exceptions/user-not-found.exception';
+import { InsufficientPermissionsException } from '../../../domain/exceptions/insufficient-permissions.exception';
+import { UserNotFoundException } from '../../../domain/exceptions/user-not-found.exception';
 
 @Catch(UserNotFoundException, InsufficientPermissionsException)
 export class UserExceptionFilter implements ExceptionFilter {

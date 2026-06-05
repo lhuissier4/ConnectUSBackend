@@ -2,10 +2,50 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from '@testcontainers/postgresql';
 import { AppModule } from './../src/app.module';
 
+/**
+ * Ce test charge l'AppModule complet, qui ouvre une connexion TypeORM. Pour
+ * rester autonome (pas de base externe), on démarre un Postgres éphémère et on
+ * pointe l'AppModule dessus via les variables d'environnement : @nestjs/config
+ * ne réécrase pas une variable déjà présente dans process.env, donc celles-ci
+ * ont priorité sur le fichier .env.
+ */
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
+  let container: StartedPostgreSqlContainer;
+  const savedEnv: Record<string, string | undefined> = {};
+
+  beforeAll(async () => {
+    container = await new PostgreSqlContainer('postgres:18').start();
+
+    const overrides: Record<string, string> = {
+      POSTGRES_HOST: container.getHost(),
+      POSTGRES_PORT: String(container.getPort()),
+      POSTGRES_USER: container.getUsername(),
+      POSTGRES_PASSWORD: container.getPassword(),
+      POSTGRES_DB: container.getDatabase(),
+    };
+    for (const [key, value] of Object.entries(overrides)) {
+      savedEnv[key] = process.env[key];
+      process.env[key] = value;
+    }
+  }, 180_000);
+
+  afterAll(async () => {
+    for (const [key, value] of Object.entries(savedEnv)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+    await container?.stop();
+  });
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -14,6 +54,10 @@ describe('AppController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+  });
+
+  afterEach(async () => {
+    await app?.close();
   });
 
   it('/ (GET)', () => {

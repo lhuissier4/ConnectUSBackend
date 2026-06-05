@@ -1,19 +1,20 @@
 import 'reflect-metadata';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { AccountStatus, StudentClass } from '../../domain/entities/user.entity';
-import { CreateUserDto } from './create-user.dto';
+import { UserDto } from './user.dto';
+import { AccountStatus } from '../../domain/entities/account-status.enum';
+import { StudentClass } from '../../domain/entities/student-class.enum';
 
 const validBase = {
   firstName: 'Jean',
   lastName: 'Dupont',
   email: 'jean@epsi.fr',
   passwordHash: 'hashedpass',
-  status: AccountStatus.TEACHER,
+  statusInSchool: AccountStatus.TEACHER,
   isAdmin: false,
 };
 
-const toDto = (data: object) => plainToInstance(CreateUserDto, data);
+const toDto = (data: object) => plainToInstance(UserDto, data);
 
 describe('CreateUserDto', () => {
   it('valide un payload correct (TEACHER)', async () => {
@@ -23,7 +24,7 @@ describe('CreateUserDto', () => {
 
   it('valide un STUDENT avec studentClass', async () => {
     const errors = await validate(
-      toDto({ ...validBase, status: AccountStatus.STUDENT, studentClass: StudentClass.M1 }),
+      toDto({ ...validBase, statusInSchool: AccountStatus.STUDENT, studentClass: StudentClass.M1 }),
     );
     expect(errors).toHaveLength(0);
   });
@@ -51,20 +52,20 @@ describe('CreateUserDto', () => {
     expect(errors.some((e) => e.property === 'firstName')).toBe(true);
   });
 
-  it('rejette un status inconnu', async () => {
-    const errors = await validate(toDto({ ...validBase, status: 'UNKNOWN' }));
-    expect(errors.some((e) => e.property === 'status')).toBe(true);
+  it('rejette un statusInSchool inconnu', async () => {
+    const errors = await validate(toDto({ ...validBase, statusInSchool: 'UNKNOWN' }));
+    expect(errors.some((e) => e.property === 'statusInSchool')).toBe(true);
   });
 
   it('rejette un STUDENT sans studentClass', async () => {
     const errors = await validate(
-      toDto({ ...validBase, status: AccountStatus.STUDENT }),
+      toDto({ ...validBase, statusInSchool: AccountStatus.STUDENT }),
     );
     expect(errors.some((e) => e.property === 'studentClass')).toBe(true);
   });
 
   it('accepte un TEACHER sans studentClass', async () => {
-    const errors = await validate(toDto({ ...validBase, status: AccountStatus.TEACHER }));
+    const errors = await validate(toDto({ ...validBase, statusInSchool: AccountStatus.TEACHER }));
     expect(errors).toHaveLength(0);
   });
 });

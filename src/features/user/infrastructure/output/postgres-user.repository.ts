@@ -1,11 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
-import {
-  CreateUserPayload,
-  IUserRepository,
-} from '../domain/ports/output.user.repository.port';
-import { UserEntity } from '../domain/entities/user.entity';
+import { UserEntity } from '../../domain/entities/user.entity';
+import { IUserRepository } from '../../application/ports/user.repository.port';
 import { AccountAdminAccessOrmEntity } from './orm/account-admin-access.orm-entity';
 import { UserAccountOrmEntity } from './orm/user-account.orm-entity';
 
@@ -40,26 +37,23 @@ export class PostgresUserRepository implements IUserRepository {
     );
   }
 
-  async create(
-    payload: CreateUserPayload,
-    _requestingUserId: number,
-  ): Promise<UserEntity> {
+  async create(user: UserEntity): Promise<UserEntity> {
     const newUser = this.userRepo.create({
-      firstName: payload.firstName,
-      lastName: payload.lastName,
-      email: payload.email,
-      passwordHash: payload.passwordHash,
-      status: payload.status,
-      phoneNumber: payload.phoneNumber ?? null,
-      photoUrl: payload.photoUrl ?? null,
-      rgpdPreferences: payload.rgpdPreferences ?? {},
-      currentCourse: payload.currentCourse ?? null,
-      studentClass: payload.studentClass ?? null,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      passwordHash: user.passwordHash,
+      status: user.statusInSchool,
+      phoneNumber: user.phoneNumber ?? null,
+      photoUrl: user.photoUrl ?? null,
+      rgpdPreferences: user.rgpdPreferences ?? {},
+      currentCourse: user.currentCourse ?? null,
+      studentClass: user.studentClass ?? null,
     });
 
     const saved = await this.userRepo.save(newUser);
 
-    if (payload.isAdmin) {
+    if (user.isAdmin) {
       const adminAccess = this.adminRepo.create({
         accountId: Number(saved.id),
         isActive: true,
@@ -70,7 +64,7 @@ export class PostgresUserRepository implements IUserRepository {
       await this.adminRepo.save(adminAccess);
     }
 
-    return this.toEntity(saved, payload.isAdmin);
+    return this.toEntity(saved, user.isAdmin);
   }
 
   async delete(id: number): Promise<void> {
@@ -92,15 +86,12 @@ export class PostgresUserRepository implements IUserRepository {
 
   private toEntity(row: UserAccountOrmEntity, isAdmin: boolean): UserEntity {
     return new UserEntity(
-      Number(row.id),
       row.firstName,
       row.lastName,
       row.email,
       row.passwordHash,
       row.status,
       isAdmin,
-      row.createdAt,
-      row.updatedAt,
       row.phoneNumber ?? undefined,
       row.photoUrl ?? undefined,
       row.rgpdPreferences ?? undefined,

@@ -31,7 +31,7 @@ x-requesting-user-id: {{adminUserId}}
   "lastName": "Dupont",
   "email": "jean.dupont@connectus.fr",
   "passwordHash": "$2b$10$examplehashedpassword",
-  "status": "STUDENT",
+  "statusInSchool": "STUDENT",
   "studentClass": "M1",
   "isAdmin": false,
   "phoneNumber": "0612345678"
@@ -49,11 +49,11 @@ Content-Type: application/json
 x-requesting-user-id: {{adminUserId}}
 
 {
-  "firstName": "Marie",
-  "lastName": "Admin",
+  "firstName": "Agathe",
+  "lastName": "Dupont",
   "email": "marie.admin@connectus.fr",
   "passwordHash": "$2b$10$examplehashedpassword",
-  "status": "TEACHER",
+  "statusInSchool": "TEACHER",
   "isAdmin": true,
   "phoneNumber": "0698765432"
 }

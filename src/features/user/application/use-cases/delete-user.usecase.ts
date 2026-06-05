@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { InsufficientPermissionsException } from '../exceptions/insufficient-permissions.exception';
-import { UserNotFoundException } from '../exceptions/user-not-found.exception';
-import type { IUserRepository } from '../ports/output.user.repository.port';
-import { USER_REPOSITORY_PORT } from '../ports/output.user.repository.port';
+import { InsufficientPermissionsException } from '../../domain/exceptions/insufficient-permissions.exception';
+import { UserNotFoundException } from '../../domain/exceptions/user-not-found.exception';
+import type { IUserRepository } from '../ports/user.repository.port';
+import { USER_REPOSITORY_PORT } from '../ports/user.repository.port';
 
 @Injectable()
 export class DeleteUserUseCase {

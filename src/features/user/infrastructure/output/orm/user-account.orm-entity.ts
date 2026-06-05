@@ -5,7 +5,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { AccountStatus, StudentClass } from '../../domain/entities/user.entity';
+import { AccountStatus } from '../../../domain/entities/account-status.enum';
+import { StudentClass } from '../../../domain/entities/student-class.enum';
 
 @Entity('user_accounts')
 export class UserAccountOrmEntity {

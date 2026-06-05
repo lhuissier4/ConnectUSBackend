@@ -1,14 +1,12 @@
-import { AccountStatus, UserEntity } from '../entities/user.entity';
-import { InsufficientPermissionsException } from '../exceptions/insufficient-permissions.exception';
-import { UserNotFoundException } from '../exceptions/user-not-found.exception';
-import { IUserRepository } from '../ports/output.user.repository.port';
+import { UserEntity } from '../../domain/entities/user.entity';
+import { AccountStatus } from '../../domain/entities/account-status.enum';
+import { InsufficientPermissionsException } from '../../domain/exceptions/insufficient-permissions.exception';
+import { UserNotFoundException } from '../../domain/exceptions/user-not-found.exception';
+import { IUserRepository } from '../ports/user.repository.port';
 import { DeleteUserUseCase } from './delete-user.usecase';
 
 const makeUserEntity = (): UserEntity =>
-  new UserEntity(
-    5, 'Marie', 'Martin', 'marie@epsi.fr', 'hash',
-    AccountStatus.ALUMNI, false, new Date(), new Date(),
-  );
+  new UserEntity('Marie', 'Martin', 'marie@epsi.fr', 'hash', AccountStatus.ALUMNI, false);
 
 describe('DeleteUserUseCase', () => {
   let useCase: DeleteUserUseCase;
@@ -28,7 +26,9 @@ describe('DeleteUserUseCase', () => {
   it("lève InsufficientPermissionsException si le demandeur n'est pas admin", async () => {
     repository.isAdmin.mockResolvedValue(false);
 
-    await expect(useCase.execute(5, 99)).rejects.toThrow(InsufficientPermissionsException);
+    await expect(useCase.execute(5, 99)).rejects.toThrow(
+      InsufficientPermissionsException,
+    );
     expect(repository.findById).not.toHaveBeenCalled();
     expect(repository.delete).not.toHaveBeenCalled();
   });
