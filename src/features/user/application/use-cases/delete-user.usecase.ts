@@ -12,7 +12,8 @@ export class DeleteUserUseCase {
   ) {}
 
   async execute(id: number, requestingUserId: number): Promise<void> {
-    const requesterIsAdmin = await this.userRepository.isAdmin(requestingUserId);
+    const requesterIsAdmin =
+      await this.userRepository.isAdmin(requestingUserId);
 
     if (!requesterIsAdmin) {
       throw new InsufficientPermissionsException(

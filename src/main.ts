@@ -6,13 +6,17 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
+  );
 
   await app.init();
 
   const configService = app.get(ConfigService);
   const port = Number(
-    configService.get<string>('API_BACKEND_PORT') ?? process.env.API_BACKEND_PORT ?? 3000,
+    configService.get<string>('API_BACKEND_PORT') ??
+      process.env.API_BACKEND_PORT ??
+      3000,
   );
   console.log(`Le serveur tourne sur le port ${port}`);
 

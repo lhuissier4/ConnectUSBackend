@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { resolve } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { MessageModule } from './features/message/message.module';
 import { UserModule } from './features/user/user.module';
 
 @Module({
@@ -12,6 +14,7 @@ import { UserModule } from './features/user/user.module';
       isGlobal: true,
       envFilePath: resolve(__dirname, '..', '.env'),
     }),
+    EventEmitterModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -27,6 +30,7 @@ import { UserModule } from './features/user/user.module';
       }),
     }),
     UserModule,
+    MessageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

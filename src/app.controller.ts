@@ -9,8 +9,4 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
-  @Get('/generic')
-  getGenericMessageInJson(): { content: string | undefined } {
-    return this.appService.getGenericMessageInJson();
-  }
 }
