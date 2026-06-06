@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { InsufficientPermissionsException } from '../../domain/exceptions/insufficient-permissions.exception';
-import { UserMapper } from '../../domain/user_mapper';
+import { UserMapper } from '../mappers/user.mapper';
 import { UserDto } from '../dto/user.dto';
 import type { IUserRepository } from '../ports/user.repository.port';
 import { USER_REPOSITORY_PORT } from '../ports/user.repository.port';
