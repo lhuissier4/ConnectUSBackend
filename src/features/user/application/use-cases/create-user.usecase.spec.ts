@@ -7,10 +7,24 @@ import { IUserRepository } from '../ports/user.repository.port';
 import { CreateUserUseCase } from './create-user.usecase';
 
 const makeDto = (isAdmin = false): UserDto =>
-  new UserDto('Jean', 'Dupont', 'jean@epsi.fr', 'hash', AccountStatus.TEACHER, isAdmin);
+  new UserDto(
+    'Jean',
+    'Dupont',
+    'jean@epsi.fr',
+    'hash',
+    AccountStatus.TEACHER,
+    isAdmin,
+  );
 
 const makeUserEntity = (): UserEntity =>
-  new UserEntity('Jean', 'Dupont', 'jean@epsi.fr', 'hash', AccountStatus.TEACHER, false);
+  new UserEntity(
+    'Jean',
+    'Dupont',
+    'jean@epsi.fr',
+    'hash',
+    AccountStatus.TEACHER,
+    false,
+  );
 
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;

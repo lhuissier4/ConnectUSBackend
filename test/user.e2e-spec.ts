@@ -50,7 +50,9 @@ describe('UserController (TA)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
+    );
     await app.init();
   });
 
@@ -156,7 +158,9 @@ describe('UserController (TA)', () => {
 
     it('201 - crée un admin si le demandeur est admin', async () => {
       mockRepository.isAdmin.mockResolvedValue(true);
-      mockRepository.create.mockResolvedValue(makeUserEntity({ isAdmin: true }));
+      mockRepository.create.mockResolvedValue(
+        makeUserEntity({ isAdmin: true }),
+      );
 
       await request(app.getHttpServer())
         .post('/users')

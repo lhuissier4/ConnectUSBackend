@@ -35,17 +35,24 @@ const makeUser = (
 describe('UserEntity', () => {
   describe('construction valide', () => {
     it('crée un TEACHER sans studentClass', () => {
-      expect(() => makeUser({ statusInSchool: AccountStatus.TEACHER })).not.toThrow();
+      expect(() =>
+        makeUser({ statusInSchool: AccountStatus.TEACHER }),
+      ).not.toThrow();
     });
 
     it('crée un STUDENT avec studentClass', () => {
       expect(() =>
-        makeUser({ statusInSchool: AccountStatus.STUDENT, studentClass: StudentClass.M1 }),
+        makeUser({
+          statusInSchool: AccountStatus.STUDENT,
+          studentClass: StudentClass.M1,
+        }),
       ).not.toThrow();
     });
 
     it('crée un ALUMNI sans studentClass', () => {
-      expect(() => makeUser({ statusInSchool: AccountStatus.ALUMNI })).not.toThrow();
+      expect(() =>
+        makeUser({ statusInSchool: AccountStatus.ALUMNI }),
+      ).not.toThrow();
     });
   });
 

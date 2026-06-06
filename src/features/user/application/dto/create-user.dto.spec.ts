@@ -24,20 +24,30 @@ describe('CreateUserDto', () => {
 
   it('valide un STUDENT avec studentClass', async () => {
     const errors = await validate(
-      toDto({ ...validBase, statusInSchool: AccountStatus.STUDENT, studentClass: StudentClass.M1 }),
+      toDto({
+        ...validBase,
+        statusInSchool: AccountStatus.STUDENT,
+        studentClass: StudentClass.M1,
+      }),
     );
     expect(errors).toHaveLength(0);
   });
 
   it('valide un payload avec champs optionnels', async () => {
     const errors = await validate(
-      toDto({ ...validBase, phoneNumber: '0601020304', photoUrl: 'https://img.fr/photo.jpg' }),
+      toDto({
+        ...validBase,
+        phoneNumber: '0601020304',
+        photoUrl: 'https://img.fr/photo.jpg',
+      }),
     );
     expect(errors).toHaveLength(0);
   });
 
   it('rejette un email invalide', async () => {
-    const errors = await validate(toDto({ ...validBase, email: 'pas-un-email' }));
+    const errors = await validate(
+      toDto({ ...validBase, email: 'pas-un-email' }),
+    );
     expect(errors.some((e) => e.property === 'email')).toBe(true);
   });
 
@@ -53,7 +63,9 @@ describe('CreateUserDto', () => {
   });
 
   it('rejette un statusInSchool inconnu', async () => {
-    const errors = await validate(toDto({ ...validBase, statusInSchool: 'UNKNOWN' }));
+    const errors = await validate(
+      toDto({ ...validBase, statusInSchool: 'UNKNOWN' }),
+    );
     expect(errors.some((e) => e.property === 'statusInSchool')).toBe(true);
   });
 
@@ -65,7 +77,9 @@ describe('CreateUserDto', () => {
   });
 
   it('accepte un TEACHER sans studentClass', async () => {
-    const errors = await validate(toDto({ ...validBase, statusInSchool: AccountStatus.TEACHER }));
+    const errors = await validate(
+      toDto({ ...validBase, statusInSchool: AccountStatus.TEACHER }),
+    );
     expect(errors).toHaveLength(0);
   });
 });

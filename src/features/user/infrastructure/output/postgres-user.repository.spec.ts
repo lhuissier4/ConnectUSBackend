@@ -7,7 +7,9 @@ import { PostgresUserRepository } from './postgres-user.repository';
 import { AccountStatus } from '../../domain/entities/account-status.enum';
 import { UserEntity } from '../../domain/entities/user.entity';
 
-const makeOrmRow = (overrides: Partial<UserAccountOrmEntity> = {}): UserAccountOrmEntity =>
+const makeOrmRow = (
+  overrides: Partial<UserAccountOrmEntity> = {},
+): UserAccountOrmEntity =>
   Object.assign(new UserAccountOrmEntity(), {
     id: 1,
     firstName: 'Jean',
@@ -25,7 +27,9 @@ const makeOrmRow = (overrides: Partial<UserAccountOrmEntity> = {}): UserAccountO
     ...overrides,
   });
 
-const makeAdminAccess = (overrides: Partial<AccountAdminAccessOrmEntity> = {}): AccountAdminAccessOrmEntity =>
+const makeAdminAccess = (
+  overrides: Partial<AccountAdminAccessOrmEntity> = {},
+): AccountAdminAccessOrmEntity =>
   Object.assign(new AccountAdminAccessOrmEntity(), {
     accountId: 1,
     isActive: true,
@@ -64,8 +68,14 @@ describe('PostgresUserRepository (TI)', () => {
     const module = await Test.createTestingModule({
       providers: [
         PostgresUserRepository,
-        { provide: getRepositoryToken(UserAccountOrmEntity), useValue: userRepo },
-        { provide: getRepositoryToken(AccountAdminAccessOrmEntity), useValue: adminRepo },
+        {
+          provide: getRepositoryToken(UserAccountOrmEntity),
+          useValue: userRepo,
+        },
+        {
+          provide: getRepositoryToken(AccountAdminAccessOrmEntity),
+          useValue: adminRepo,
+        },
       ],
     }).compile();
 
@@ -95,7 +105,10 @@ describe('PostgresUserRepository (TI)', () => {
 
   describe('findByName', () => {
     it('retourne les entités correspondantes', async () => {
-      const rows = [makeOrmRow({ id: 1 }), makeOrmRow({ id: 2, email: 'jean2@epsi.fr' })];
+      const rows = [
+        makeOrmRow({ id: 1 }),
+        makeOrmRow({ id: 2, email: 'jean2@epsi.fr' }),
+      ];
       userRepo.createQueryBuilder().getMany.mockResolvedValue(rows);
       adminRepo.findOne.mockResolvedValue(null);
 
@@ -113,7 +126,12 @@ describe('PostgresUserRepository (TI)', () => {
       adminRepo.findOne.mockResolvedValue(null);
 
       const user = new UserEntity(
-        'Jean', 'Dupont', 'jean@epsi.fr', 'hash', AccountStatus.TEACHER, false,
+        'Jean',
+        'Dupont',
+        'jean@epsi.fr',
+        'hash',
+        AccountStatus.TEACHER,
+        false,
       );
 
       const result = await repo.create(user);
@@ -131,7 +149,12 @@ describe('PostgresUserRepository (TI)', () => {
       adminRepo.save.mockResolvedValue(makeAdminAccess());
 
       const user = new UserEntity(
-        'Jean', 'Dupont', 'jean@epsi.fr', 'hash', AccountStatus.TEACHER, true,
+        'Jean',
+        'Dupont',
+        'jean@epsi.fr',
+        'hash',
+        AccountStatus.TEACHER,
+        true,
       );
 
       await repo.create(user);

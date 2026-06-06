@@ -5,7 +5,14 @@ import { IUserRepository } from '../ports/user.repository.port';
 import { GetUserByNameUseCase } from './get-user-by-name.usecase';
 
 const makeUserEntity = (suffix = '1'): UserEntity =>
-  new UserEntity('Jean', 'Dupont', `jean${suffix}@epsi.fr`, 'hash', AccountStatus.TEACHER, false);
+  new UserEntity(
+    'Jean',
+    'Dupont',
+    `jean${suffix}@epsi.fr`,
+    'hash',
+    AccountStatus.TEACHER,
+    false,
+  );
 
 describe('GetUserByNameUseCase', () => {
   let useCase: GetUserByNameUseCase;

@@ -6,7 +6,14 @@ import { IUserRepository } from '../ports/user.repository.port';
 import { DeleteUserUseCase } from './delete-user.usecase';
 
 const makeUserEntity = (): UserEntity =>
-  new UserEntity('Marie', 'Martin', 'marie@epsi.fr', 'hash', AccountStatus.ALUMNI, false);
+  new UserEntity(
+    'Marie',
+    'Martin',
+    'marie@epsi.fr',
+    'hash',
+    AccountStatus.ALUMNI,
+    false,
+  );
 
 describe('DeleteUserUseCase', () => {
   let useCase: DeleteUserUseCase;
@@ -37,7 +44,9 @@ describe('DeleteUserUseCase', () => {
     repository.isAdmin.mockResolvedValue(true);
     repository.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(999, 1)).rejects.toThrow(UserNotFoundException);
+    await expect(useCase.execute(999, 1)).rejects.toThrow(
+      UserNotFoundException,
+    );
     expect(repository.delete).not.toHaveBeenCalled();
   });
 

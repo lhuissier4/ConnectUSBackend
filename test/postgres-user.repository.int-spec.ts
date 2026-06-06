@@ -39,8 +39,7 @@ const applyMigrations = async (dataSource: DataSource): Promise<void> => {
   const files = readdirSync(MIGRATIONS_DIR)
     .filter((f) => /^V\d+__.*\.sql$/.test(f))
     .sort(
-      (a, b) =>
-        Number(/^V(\d+)/.exec(a)![1]) - Number(/^V(\d+)/.exec(b)![1]),
+      (a, b) => Number(/^V(\d+)/.exec(a)![1]) - Number(/^V(\d+)/.exec(b)![1]),
     );
 
   for (const file of files) {
