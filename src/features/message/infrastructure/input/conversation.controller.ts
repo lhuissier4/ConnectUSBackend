@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -21,14 +22,23 @@ import { ChatService } from './chat.service';
 export class ConversationController {
   constructor(private readonly chatService: ChatService) {}
 
+  private parseRequestingUserId(raw: string | undefined): number {
+    const userId = Number(raw);
+    if (!raw || Number.isNaN(userId) || !Number.isFinite(userId) || !Number.isInteger(userId)) {
+      throw new BadRequestException('Header x-requesting-user-id invalide ou manquant.');
+    }
+    return userId;
+  }
+
   @Post()
   async createConversation(
     @Body() dto: CreateConversationDto,
     @Headers('x-requesting-user-id') requestingUserId: string,
     @Res({ passthrough: true }) res: Response,
   ) {
+    const userId = this.parseRequestingUserId(requestingUserId);
     const result = await this.chatService.createConversation(
-      Number(requestingUserId),
+      userId,
       dto.targetUserId,
     );
     res.status(result.created ? 201 : 200);
@@ -36,19 +46,21 @@ export class ConversationController {
   }
 
   @Get()
-  listConversations(@Headers('x-requesting-user-id') requestingUserId: string) {
-    return this.chatService.listConversations(Number(requestingUserId));
+  listConversations(@Headers('x-requesting-user-id') requestingUserId?: string) {
+    const userId = this.parseRequestingUserId(requestingUserId);
+    return this.chatService.listConversations(userId);
   }
 
   @Get(':id/messages')
   getMessages(
     @Param('id', ParseIntPipe) conversationId: number,
-    @Headers('x-requesting-user-id') requestingUserId: string,
+    @Headers('x-requesting-user-id') requestingUserId?: string,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
     @Query('before', new ParseIntPipe({ optional: true })) before?: number,
   ) {
+    const userId = this.parseRequestingUserId(requestingUserId);
     return this.chatService.getConversationMessages(
-      Number(requestingUserId),
+      userId,
       conversationId,
       limit,
       before,
@@ -59,10 +71,11 @@ export class ConversationController {
   sendMessage(
     @Param('id', ParseIntPipe) conversationId: number,
     @Body() dto: SendMessageDto,
-    @Headers('x-requesting-user-id') requestingUserId: string,
+    @Headers('x-requesting-user-id') requestingUserId?: string,
   ) {
+    const userId = this.parseRequestingUserId(requestingUserId);
     return this.chatService.sendMessage(
-      Number(requestingUserId),
+      userId,
       conversationId,
       dto.content,
       dto.responseToMessageId,
