@@ -52,7 +52,11 @@ describe('SendMessageUseCase', () => {
     });
     expect(eventEmitter.emit).toHaveBeenCalledWith(
       MESSAGE_CREATED_EVENT,
-      expect.objectContaining({ conversationId: 42, message: dto }),
+      expect.objectContaining({
+        conversationId: 42,
+        message: dto,
+        participantIds: [3, 8],
+      }),
     );
   });
 

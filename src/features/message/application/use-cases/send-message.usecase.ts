@@ -59,7 +59,10 @@ export class SendMessageUseCase {
     const dto = MessageMapper.message_entity_to_message_dto(message);
     this.eventEmitter.emit(
       MESSAGE_CREATED_EVENT,
-      new MessageCreatedEvent(conversationId, dto),
+      new MessageCreatedEvent(conversationId, dto, [
+        conversation.participantAId,
+        conversation.participantBId,
+      ]),
     );
     return dto;
   }

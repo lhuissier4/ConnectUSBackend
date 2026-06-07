@@ -1,4 +1,3 @@
-import { Inject } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import {
   ConnectedSocket,
@@ -13,8 +12,6 @@ import {
   MESSAGE_CREATED_EVENT,
   MessageCreatedEvent,
 } from '../../application/events/message-created.event';
-import type { IConversationRepository } from '../../application/ports/conversation.repository.port';
-import { CONVERSATION_REPOSITORY_PORT } from '../../application/ports/conversation.repository.port';
 import { SendMessageUseCase } from '../../application/use-cases/send-message.usecase';
 
 interface SendMessagePayload {
@@ -27,26 +24,23 @@ interface ChatSocketData {
   userId?: number;
 }
 
-const roomFor = (conversationId: number): string =>
-  `conversation:${conversationId}`;
+const roomFor = (userId: number): string => `user:${userId}`;
 
 /**
  * Gateway temps réel (Socket.IO, namespace /chat).
- * - À la connexion, l'utilisateur (identifié dans le handshake) est auto-rejoint
- *   aux rooms de toutes ses conversations (appartenance figée à la création).
+ * - À la connexion, l'utilisateur (identifié dans le handshake) rejoint sa room
+ *   personnelle `user:<id>`, stable pour toute la durée de vie de la socket.
  * - L'event entrant `send` passe par le MÊME SendMessageUseCase que le REST.
- * - À chaque message créé (REST ou WS), `@OnEvent` diffuse `message:new` à la room.
+ * - À chaque message créé (REST ou WS), `@OnEvent` diffuse `message:new` vers la
+ *   room de chaque participant — l'appartenance ne dépend donc plus de l'instant
+ *   de connexion ni de l'existence de la conversation à ce moment-là.
  */
 @WebSocketGateway({ namespace: '/chat', cors: { origin: '*' } })
 export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer()
   private readonly server: Server;
 
-  constructor(
-    @Inject(CONVERSATION_REPOSITORY_PORT)
-    private readonly conversationRepository: IConversationRepository,
-    private readonly sendMessageUseCase: SendMessageUseCase,
-  ) {}
+  constructor(private readonly sendMessageUseCase: SendMessageUseCase) {}
 
   async handleConnection(client: Socket): Promise<void> {
     const userId = this.resolveUserId(client);
@@ -56,10 +50,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
 
     (client.data as ChatSocketData).userId = userId;
-    const conversations = await this.conversationRepository.listForUser(userId);
-    for (const conversation of conversations) {
-      await client.join(roomFor(conversation.id));
-    }
+    await client.join(roomFor(userId));
   }
 
   @SubscribeMessage('send')
@@ -82,9 +73,9 @@ export class ChatGateway implements OnGatewayConnection {
 
   @OnEvent(MESSAGE_CREATED_EVENT)
   broadcastMessage(event: MessageCreatedEvent): void {
-    this.server
-      .to(roomFor(event.conversationId))
-      .emit('message:new', event.message);
+    for (const participantId of event.participantIds) {
+      this.server.to(roomFor(participantId)).emit('message:new', event.message);
+    }
   }
 
   private resolveUserId(client: Socket): number | null {

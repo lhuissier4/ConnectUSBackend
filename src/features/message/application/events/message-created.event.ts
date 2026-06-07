@@ -8,5 +8,7 @@ export class MessageCreatedEvent {
   constructor(
     public readonly conversationId: number,
     public readonly message: MessageDto,
+    /** Participants de la conversation, pour diffuser vers leurs rooms `user:<id>`. */
+    public readonly participantIds: number[],
   ) {}
 }
