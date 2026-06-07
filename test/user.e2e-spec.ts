@@ -8,6 +8,7 @@ import { CreateUserUseCase } from '../src/features/user/application/use-cases/cr
 import { DeleteUserUseCase } from '../src/features/user/application/use-cases/delete-user.usecase';
 import { GetUserByIdUseCase } from '../src/features/user/application/use-cases/get-user-by-id.usecase';
 import { GetUserByNameUseCase } from '../src/features/user/application/use-cases/get-user-by-name.usecase';
+import { GetUserCardUseCase } from '../src/features/user/application/use-cases/get-user-card.usecase';
 import { UserController } from '../src/features/user/infrastructure/input/user.controller';
 import { UserService } from '../src/features/user/infrastructure/input/user.service';
 import { AccountStatus } from '../src/features/user/domain/entities/account-status.enum';
@@ -31,6 +32,7 @@ describe('UserController (TA)', () => {
   beforeEach(async () => {
     mockRepository = {
       findById: jest.fn(),
+      findCardById: jest.fn(),
       findByName: jest.fn(),
       create: jest.fn(),
       delete: jest.fn(),
@@ -42,6 +44,7 @@ describe('UserController (TA)', () => {
       providers: [
         UserService,
         GetUserByIdUseCase,
+        GetUserCardUseCase,
         GetUserByNameUseCase,
         CreateUserUseCase,
         DeleteUserUseCase,

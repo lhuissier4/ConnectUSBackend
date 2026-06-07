@@ -34,7 +34,10 @@ describe('ConversationController (e2e, ports mockés)', () => {
       findByConversation: jest.fn(),
       findLastByConversation: jest.fn(),
     };
-    userLookup = { exists: jest.fn().mockResolvedValue(true) };
+    userLookup = {
+      exists: jest.fn().mockResolvedValue(true),
+      getNames: jest.fn().mockResolvedValue(new Map()),
+    };
 
     const moduleFixture = await Test.createTestingModule({
       imports: [EventEmitterModule.forRoot()],
@@ -80,6 +83,7 @@ describe('ConversationController (e2e, ports mockés)', () => {
           expect(res.body).toEqual({
             id: 1,
             otherParticipantId: 8,
+            otherParticipantName: 'Utilisateur 8',
             lastMessage: null,
           });
         });

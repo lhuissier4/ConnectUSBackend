@@ -7,6 +7,7 @@ import { ChatGateway } from '../src/features/message/infrastructure/input/chat.g
 import { SendMessageUseCase } from '../src/features/message/application/use-cases/send-message.usecase';
 import { CONVERSATION_REPOSITORY_PORT } from '../src/features/message/application/ports/conversation.repository.port';
 import { MESSAGE_REPOSITORY_PORT } from '../src/features/message/application/ports/message.repository.port';
+import { USER_LOOKUP_PORT } from '../src/features/message/application/ports/user-lookup.port';
 import { ConversationEntity } from '../src/features/message/domain/entities/conversation.entity';
 import { MessageEntity } from '../src/features/message/domain/entities/message.entity';
 
@@ -45,6 +46,13 @@ describe('ChatGateway (e2e, diffusion temps réel)', () => {
         SendMessageUseCase,
         { provide: CONVERSATION_REPOSITORY_PORT, useValue: conversationRepo },
         { provide: MESSAGE_REPOSITORY_PORT, useValue: messageRepo },
+        {
+          provide: USER_LOOKUP_PORT,
+          useValue: {
+            exists: jest.fn().mockResolvedValue(true),
+            getNames: jest.fn().mockResolvedValue(new Map()),
+          },
+        },
       ],
     }).compile();
 
