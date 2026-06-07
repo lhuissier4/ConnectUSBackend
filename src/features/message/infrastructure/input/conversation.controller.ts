@@ -21,14 +21,23 @@ import { ChatService } from './chat.service';
 export class ConversationController {
   constructor(private readonly chatService: ChatService) {}
 
+  private parseRequestingUserId(raw: string | undefined): number {
+    const n = Number(raw);
+    if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) {
+      throw new Error('Invalid x-requesting-user-id header');
+    }
+    return n;
+  }
+
   @Post()
   async createConversation(
     @Body() dto: CreateConversationDto,
     @Headers('x-requesting-user-id') requestingUserId: string,
     @Res({ passthrough: true }) res: Response,
   ) {
+    const userId = this.parseRequestingUserId(requestingUserId);
     const result = await this.chatService.createConversation(
-      Number(requestingUserId),
+      userId,
       dto.targetUserId,
     );
     res.status(result.created ? 201 : 200);
@@ -37,7 +46,9 @@ export class ConversationController {
 
   @Get()
   listConversations(@Headers('x-requesting-user-id') requestingUserId: string) {
-    return this.chatService.listConversations(Number(requestingUserId));
+    return this.chatService.listConversations(
+      this.parseRequestingUserId(requestingUserId),
+    );
   }
 
   @Get(':id/messages')
@@ -48,7 +59,7 @@ export class ConversationController {
     @Query('before', new ParseIntPipe({ optional: true })) before?: number,
   ) {
     return this.chatService.getConversationMessages(
-      Number(requestingUserId),
+      this.parseRequestingUserId(requestingUserId),
       conversationId,
       limit,
       before,
@@ -62,7 +73,7 @@ export class ConversationController {
     @Headers('x-requesting-user-id') requestingUserId: string,
   ) {
     return this.chatService.sendMessage(
-      Number(requestingUserId),
+      this.parseRequestingUserId(requestingUserId),
       conversationId,
       dto.content,
       dto.responseToMessageId,
