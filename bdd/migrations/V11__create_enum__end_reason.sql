@@ -1,0 +1,7 @@
+CREATE TYPE end_reason AS ENUM (
+  'HANGUP',
+  'CALLER_HANGUP',
+  'TIMEOUT',
+  'DECLINED',
+  'REJOIN_TIMEOUT'
+);
