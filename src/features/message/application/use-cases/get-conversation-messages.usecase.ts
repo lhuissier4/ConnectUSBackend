@@ -7,6 +7,8 @@ import type { IConversationRepository } from '../ports/conversation.repository.p
 import { CONVERSATION_REPOSITORY_PORT } from '../ports/conversation.repository.port';
 import type { IMessageRepository } from '../ports/message.repository.port';
 import { MESSAGE_REPOSITORY_PORT } from '../ports/message.repository.port';
+import type { IUserLookup } from '../ports/user-lookup.port';
+import { USER_LOOKUP_PORT } from '../ports/user-lookup.port';
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
@@ -18,6 +20,8 @@ export class GetConversationMessagesUseCase {
     private readonly conversationRepository: IConversationRepository,
     @Inject(MESSAGE_REPOSITORY_PORT)
     private readonly messageRepository: IMessageRepository,
+    @Inject(USER_LOOKUP_PORT)
+    private readonly userLookup: IUserLookup,
   ) {}
 
   async execute(
@@ -46,8 +50,14 @@ export class GetConversationMessagesUseCase {
       before,
     );
 
+    const authorIds = [...new Set(messages.map((m) => m.authorId))];
+    const names = await this.userLookup.getNames(authorIds);
+
     return messages.map((message) =>
-      MessageMapper.message_entity_to_message_dto(message),
+      MessageMapper.message_entity_to_message_dto(
+        message,
+        names.get(message.authorId) ?? `Utilisateur ${message.authorId}`,
+      ),
     );
   }
 }

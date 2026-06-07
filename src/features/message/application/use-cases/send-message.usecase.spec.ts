@@ -7,6 +7,7 @@ import { InvalidMessageException } from '../../domain/exceptions/invalid-message
 import { NotAParticipantException } from '../../domain/exceptions/not-a-participant.exception';
 import { IConversationRepository } from '../ports/conversation.repository.port';
 import { IMessageRepository } from '../ports/message.repository.port';
+import { IUserLookup } from '../ports/user-lookup.port';
 import { MESSAGE_CREATED_EVENT } from '../events/message-created.event';
 import { SendMessageUseCase } from './send-message.usecase';
 
@@ -19,6 +20,7 @@ describe('SendMessageUseCase', () => {
   let conversationRepo: jest.Mocked<IConversationRepository>;
   let messageRepo: jest.Mocked<IMessageRepository>;
   let eventEmitter: jest.Mocked<Pick<EventEmitter2, 'emit'>>;
+  let userLookup: jest.Mocked<IUserLookup>;
 
   beforeEach(() => {
     conversationRepo = {
@@ -34,16 +36,22 @@ describe('SendMessageUseCase', () => {
       findLastByConversation: jest.fn(),
     };
     eventEmitter = { emit: jest.fn() };
+    userLookup = {
+      exists: jest.fn().mockResolvedValue(true),
+      getNames: jest.fn().mockResolvedValue(new Map([[3, 'Jean Dupont']])),
+    };
     useCase = new SendMessageUseCase(
       conversationRepo,
       messageRepo,
       eventEmitter as unknown as EventEmitter2,
+      userLookup,
     );
   });
 
   it('persiste le message et émet message.created', async () => {
     const dto = await useCase.execute(3, 42, 'salut');
 
+    expect(dto.authorName).toBe('Jean Dupont');
     expect(messageRepo.create).toHaveBeenCalledWith({
       conversationId: 42,
       authorId: 3,

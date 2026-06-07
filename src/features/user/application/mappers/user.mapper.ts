@@ -26,6 +26,28 @@ export class UserMapper {
     );
   }
 
+  /**
+   * Projection de lecture « profil » : tous les champs SAUF passwordHash.
+   * Évite d'exposer le hash de mot de passe sur le chemin de lecture client.
+   */
+  static user_entity_to_profile(user_entity: UserEntity): Omit<
+    UserDto,
+    'passwordHash'
+  > {
+    return {
+      firstName: user_entity.firstName,
+      lastName: user_entity.lastName,
+      email: user_entity.email,
+      statusInSchool: user_entity.statusInSchool,
+      isAdmin: user_entity.isAdmin,
+      phoneNumber: user_entity.phoneNumber,
+      photoUrl: user_entity.photoUrl,
+      rgpdPreferences: user_entity.rgpdPreferences,
+      currentCourse: user_entity.currentCourse,
+      studentClass: user_entity.studentClass,
+    };
+  }
+
   static user_dto_to_user_entity(user_dto: UserDto): UserEntity {
     return new UserEntity(
       user_dto.firstName,

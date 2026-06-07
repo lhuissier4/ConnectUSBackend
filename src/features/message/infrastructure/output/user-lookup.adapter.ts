@@ -19,4 +19,20 @@ export class UserLookupAdapter implements IUserLookup {
     );
     return rows[0]?.exists === true;
   }
+
+  async getNames(ids: number[]): Promise<Map<number, string>> {
+    const names = new Map<number, string>();
+    if (ids.length === 0) return names;
+
+    const rows: Array<{ id: number; first_name: string; last_name: string }> =
+      await this.dataSource.query(
+        'SELECT id, first_name, last_name FROM user_accounts WHERE id = ANY($1)',
+        [ids],
+      );
+
+    for (const row of rows) {
+      names.set(Number(row.id), `${row.first_name} ${row.last_name}`);
+    }
+    return names;
+  }
 }

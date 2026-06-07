@@ -1,4 +1,5 @@
 import { UserEntity } from '../../domain/entities/user.entity';
+import { UserCardDto } from '../dto/user-card.dto';
 
 /**
  * Port de sortie : contrat de persistance des utilisateurs.
@@ -8,6 +9,8 @@ import { UserEntity } from '../../domain/entities/user.entity';
  */
 export interface IUserRepository {
   findById(id: number): Promise<UserEntity | null>;
+  /** Projection publique (id + nom), sans donnée sensible, pour login/affichage. */
+  findCardById(id: number): Promise<UserCardDto | null>;
   findByName(firstName: string, lastName: string): Promise<UserEntity[]>;
   create(user: UserEntity): Promise<UserEntity>;
   delete(id: number): Promise<void>;

@@ -21,7 +21,10 @@ describe('CreateConversationUseCase', () => {
       create: jest.fn(),
       listForUser: jest.fn(),
     };
-    userLookup = { exists: jest.fn().mockResolvedValue(true) };
+    userLookup = {
+      exists: jest.fn().mockResolvedValue(true),
+      getNames: jest.fn().mockResolvedValue(new Map([[3, 'Jean Dupont']])),
+    };
     useCase = new CreateConversationUseCase(conversationRepo, userLookup);
   });
 

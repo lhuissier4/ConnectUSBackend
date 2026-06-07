@@ -13,6 +13,8 @@ import type { IConversationRepository } from '../ports/conversation.repository.p
 import { CONVERSATION_REPOSITORY_PORT } from '../ports/conversation.repository.port';
 import type { IMessageRepository } from '../ports/message.repository.port';
 import { MESSAGE_REPOSITORY_PORT } from '../ports/message.repository.port';
+import type { IUserLookup } from '../ports/user-lookup.port';
+import { USER_LOOKUP_PORT } from '../ports/user-lookup.port';
 
 @Injectable()
 export class SendMessageUseCase {
@@ -22,6 +24,8 @@ export class SendMessageUseCase {
     @Inject(MESSAGE_REPOSITORY_PORT)
     private readonly messageRepository: IMessageRepository,
     private readonly eventEmitter: EventEmitter2,
+    @Inject(USER_LOOKUP_PORT)
+    private readonly userLookup: IUserLookup,
   ) {}
 
   async execute(
@@ -56,7 +60,9 @@ export class SendMessageUseCase {
       responseToMessageId,
     });
 
-    const dto = MessageMapper.message_entity_to_message_dto(message);
+    const names = await this.userLookup.getNames([callerId]);
+    const authorName = names.get(callerId) ?? `Utilisateur ${callerId}`;
+    const dto = MessageMapper.message_entity_to_message_dto(message, authorName);
     this.eventEmitter.emit(
       MESSAGE_CREATED_EVENT,
       new MessageCreatedEvent(conversationId, dto, [

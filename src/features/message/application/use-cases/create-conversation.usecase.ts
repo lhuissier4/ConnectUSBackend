@@ -38,6 +38,10 @@ export class CreateConversationUseCase {
       }
     }
 
+    // L'interlocuteur (relatif à l'appelant) est la cible : on résout son nom.
+    const names = await this.userLookup.getNames([targetUserId]);
+    const otherName = names.get(targetUserId) ?? `Utilisateur ${targetUserId}`;
+
     const existing = await this.conversationRepository.findByParticipants(
       participantAId,
       participantBId,
@@ -48,6 +52,7 @@ export class CreateConversationUseCase {
           ConversationMapper.conversation_entity_to_conversation_dto(
             existing,
             callerId,
+            otherName,
           ),
         created: false,
       };
@@ -61,6 +66,7 @@ export class CreateConversationUseCase {
       conversation: ConversationMapper.conversation_entity_to_conversation_dto(
         created,
         callerId,
+        otherName,
       ),
       created: true,
     };

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { UserEntity } from '../../domain/entities/user.entity';
+import { UserCardDto } from '../../application/dto/user-card.dto';
 import { IUserRepository } from '../../application/ports/user.repository.port';
 import { AccountAdminAccessOrmEntity } from './orm/account-admin-access.orm-entity';
 import { UserAccountOrmEntity } from './orm/user-account.orm-entity';
@@ -20,6 +21,12 @@ export class PostgresUserRepository implements IUserRepository {
     if (!row) return null;
     const isAdmin = await this.isAdmin(id);
     return this.toEntity(row, isAdmin);
+  }
+
+  async findCardById(id: number): Promise<UserCardDto | null> {
+    const row = await this.userRepo.findOneBy({ id });
+    if (!row) return null;
+    return new UserCardDto(Number(row.id), row.firstName, row.lastName);
   }
 
   async findByName(firstName: string, lastName: string): Promise<UserEntity[]> {

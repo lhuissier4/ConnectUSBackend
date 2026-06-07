@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CreateUserUseCase } from './application/use-cases/create-user.usecase';
 import { DeleteUserUseCase } from './application/use-cases/delete-user.usecase';
 import { GetUserByIdUseCase } from './application/use-cases/get-user-by-id.usecase';
+import { GetUserCardUseCase } from './application/use-cases/get-user-card.usecase';
 import { GetUserByNameUseCase } from './application/use-cases/get-user-by-name.usecase';
 import { AccountAdminAccessOrmEntity } from './infrastructure/output/orm/account-admin-access.orm-entity';
 import { UserAccountOrmEntity } from './infrastructure/output/orm/user-account.orm-entity';
@@ -26,6 +27,7 @@ import { USER_REPOSITORY_PORT } from './application/ports/user.repository.port';
     },
     UserService,
     GetUserByIdUseCase,
+    GetUserCardUseCase,
     GetUserByNameUseCase,
     CreateUserUseCase,
     DeleteUserUseCase,

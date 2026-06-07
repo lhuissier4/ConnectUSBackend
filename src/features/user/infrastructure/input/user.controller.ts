@@ -27,6 +27,11 @@ export class UserController {
     return this.userService.getUserByName(firstName, lastName);
   }
 
+  @Get(':id/card')
+  getUserCard(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.getUserCard(id);
+  }
+
   @Get(':id')
   getUserById(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getUserById(id);

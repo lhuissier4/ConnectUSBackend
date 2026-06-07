@@ -5,6 +5,7 @@ import { ConversationNotFoundException } from '../../domain/exceptions/conversat
 import { NotAParticipantException } from '../../domain/exceptions/not-a-participant.exception';
 import { IConversationRepository } from '../ports/conversation.repository.port';
 import { IMessageRepository } from '../ports/message.repository.port';
+import { IUserLookup } from '../ports/user-lookup.port';
 import { GetConversationMessagesUseCase } from './get-conversation-messages.usecase';
 
 const conversation = new ConversationEntity(42, 3, 8, new Date(), new Date());
@@ -13,6 +14,7 @@ describe('GetConversationMessagesUseCase', () => {
   let useCase: GetConversationMessagesUseCase;
   let conversationRepo: jest.Mocked<IConversationRepository>;
   let messageRepo: jest.Mocked<IMessageRepository>;
+  let userLookup: jest.Mocked<IUserLookup>;
 
   beforeEach(() => {
     conversationRepo = {
@@ -31,7 +33,15 @@ describe('GetConversationMessagesUseCase', () => {
         ]),
       findLastByConversation: jest.fn(),
     };
-    useCase = new GetConversationMessagesUseCase(conversationRepo, messageRepo);
+    userLookup = {
+      exists: jest.fn().mockResolvedValue(true),
+      getNames: jest.fn().mockResolvedValue(new Map([[3, 'Jean Dupont']])),
+    };
+    useCase = new GetConversationMessagesUseCase(
+      conversationRepo,
+      messageRepo,
+      userLookup,
+    );
   });
 
   it('lève ConversationNotFoundException si la conversation est absente', async () => {
@@ -59,5 +69,11 @@ describe('GetConversationMessagesUseCase', () => {
   it('transmet le curseur before et borne la limite', async () => {
     await useCase.execute(3, 42, 999, 50);
     expect(messageRepo.findByConversation).toHaveBeenCalledWith(42, 100, 50);
+  });
+
+  it("renseigne le nom d'affichage de l'auteur sur chaque message", async () => {
+    const messages = await useCase.execute(3, 42);
+    expect(userLookup.getNames).toHaveBeenCalledWith([3]);
+    expect(messages[0].authorName).toBe('Jean Dupont');
   });
 });

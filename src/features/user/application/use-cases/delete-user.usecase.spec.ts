@@ -22,6 +22,7 @@ describe('DeleteUserUseCase', () => {
   beforeEach(() => {
     repository = {
       findById: jest.fn(),
+      findCardById: jest.fn(),
       findByName: jest.fn(),
       create: jest.fn(),
       delete: jest.fn(),

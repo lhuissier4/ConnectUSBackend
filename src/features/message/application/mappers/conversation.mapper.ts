@@ -12,13 +12,19 @@ export class ConversationMapper {
   static conversation_entity_to_conversation_dto(
     conversation: ConversationEntity,
     callerId: number,
+    otherParticipantName: string,
     lastMessage: MessageEntity | null = null,
+    lastMessageAuthorName?: string,
   ): ConversationDto {
     return new ConversationDto(
       conversation.id,
       conversation.otherParticipant(callerId),
+      otherParticipantName,
       lastMessage
-        ? MessageMapper.message_entity_to_message_dto(lastMessage)
+        ? MessageMapper.message_entity_to_message_dto(
+            lastMessage,
+            lastMessageAuthorName ?? `Utilisateur ${lastMessage.authorId}`,
+          )
         : null,
     );
   }
