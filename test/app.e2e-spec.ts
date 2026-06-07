@@ -6,7 +6,9 @@ import {
   PostgreSqlContainer,
   StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
+import { DataSource } from 'typeorm';
 import { AppModule } from './../src/app.module';
+import { applyMigrations } from './support/apply-migrations';
 
 /**
  * Ce test charge l'AppModule complet, qui ouvre une connexion TypeORM. Pour
@@ -34,6 +36,22 @@ describe('AppController (e2e)', () => {
       savedEnv[key] = process.env[key];
       process.env[key] = value;
     }
+
+    // Le schéma n'est pas créé par TypeORM (synchronize: false). On applique les
+    // migrations Flyway au conteneur pour que l'AppModule boote contre un vrai
+    // schéma — la reprise des appels au démarrage (CallRecoveryService) interroge
+    // la table `calls` dès l'initialisation.
+    const migrationDataSource = new DataSource({
+      type: 'postgres',
+      host: container.getHost(),
+      port: container.getPort(),
+      username: container.getUsername(),
+      password: container.getPassword(),
+      database: container.getDatabase(),
+    });
+    await migrationDataSource.initialize();
+    await applyMigrations(migrationDataSource);
+    await migrationDataSource.destroy();
   }, 180_000);
 
   afterAll(async () => {

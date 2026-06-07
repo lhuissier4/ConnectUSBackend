@@ -156,15 +156,12 @@ describe('Postgres message repositories (intégration, conteneur éphémère)', 
       const [a, b] = alice < clara ? [alice, clara] : [clara, alice];
       const conv = await conversationRepo.create(a, b);
 
-      const created = [];
       for (let i = 1; i <= 5; i++) {
-        created.push(
-          await messageRepo.create({
-            conversationId: conv.id,
-            authorId: alice,
-            content: `msg ${i}`,
-          }),
-        );
+        await messageRepo.create({
+          conversationId: conv.id,
+          authorId: alice,
+          content: `msg ${i}`,
+        });
       }
 
       // Page initiale : 3 derniers, en ordre chronologique.
