@@ -1,0 +1,80 @@
+# Lance deux clients try-a-call à identité fixe (User 1 et User 2) + un service
+# one-shot qui crée la conversation 1↔2 dont l'appel a besoin.
+#
+# Pré-requis : le backend tourne SUR L'HÔTE (npm run start:dev) AVANT
+# `docker compose -f docker-compose-try-a-call.yaml up` — le seed l'interroge.
+#
+# Le port du backend est lu depuis .env (API_BACKEND_PORT, défaut 3000) : clients
+# et seed pointent automatiquement le bon port.
+#
+# Chaque client est un nginx qui copie le dossier monté en lecture seule puis
+# régénère config.js à partir de ses variables d'environnement (pas de Dockerfile).
+services:
+  client-1:
+    image: nginx:alpine
+    container_name: try_a_call_client_1
+    ports:
+      - "8081:80"
+    volumes:
+      - ./try-a-call:/src:ro
+    environment:
+      USER_ID: "1"
+      PEER_ID: "2"
+      CONVERSATION_ID: "1"
+      SERVER_URL: "http://localhost:${API_BACKEND_PORT:-3000}"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        cp -r /src/. /usr/share/nginx/html/
+        printf 'window.CONFIG={userId:%s,peerId:%s,conversationId:%s,serverUrl:"%s"};' \
+          "$$USER_ID" "$$PEER_ID" "$$CONVERSATION_ID" "$$SERVER_URL" \
+          > /usr/share/nginx/html/config.js
+        exec nginx -g 'daemon off;'
+
+  client-2:
+    image: nginx:alpine
+    container_name: try_a_call_client_2
+    ports:
+      - "8082:80"
+    volumes:
+      - ./try-a-call:/src:ro
+    environment:
+      USER_ID: "2"
+      PEER_ID: "1"
+      CONVERSATION_ID: "1"
+      SERVER_URL: "http://localhost:${API_BACKEND_PORT:-3000}"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        cp -r /src/. /usr/share/nginx/html/
+        printf 'window.CONFIG={userId:%s,peerId:%s,conversationId:%s,serverUrl:"%s"};' \
+          "$$USER_ID" "$$PEER_ID" "$$CONVERSATION_ID" "$$SERVER_URL" \
+          > /usr/share/nginx/html/config.js
+        exec nginx -g 'daemon off;'
+
+  # One-shot : crée la conversation 1↔2 sur le backend de l'hôte.
+  # POST /conversations est idempotent (renvoie la conv existante) → relançable.
+  # --retry-connrefused : patiente si le backend hôte démarre encore.
+  seed-conversation:
+    image: curlimages/curl:latest
+    container_name: try_a_call_seed
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        URL="http://host.docker.internal:${API_BACKEND_PORT:-3000}/conversations"
+        echo "-> Creation de la conversation 1<->2 sur $$URL ..."
+        curl -sS --retry 30 --retry-delay 2 --retry-connrefused \
+          -X POST "$$URL" \
+          -H 'Content-Type: application/json' \
+          -H 'x-requesting-user-id: 1' \
+          -d '{"targetUserId":2}'
+        code=$$?
+        echo ""
+        if [ $$code -eq 0 ]; then
+          echo "OK conversation prete (voir l'id ci-dessus)."
+        else
+          echo "ECHEC : le backend tourne-t-il sur le port ${API_BACKEND_PORT:-3000} ?"
+        fi
+    restart: "no"

@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>try-a-call — ConnectUS</title>
+    <style>
+      /* Force le masquage : une règle #id { display:… } l'emporterait sinon sur
+         l'attribut hidden (faible spécificité) et l'élément resterait visible. */
+      [hidden] {
+        display: none !important;
+      }
+      :root {
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 1rem;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 1rem;
+      }
+      header h1 {
+        font-size: 1rem;
+        margin: 0;
+        color: #94a3b8;
+        font-weight: 500;
+      }
+      #identity {
+        font-weight: 700;
+        font-size: 1.05rem;
+      }
+      #status {
+        font-size: 0.7rem;
+        color: #94a3b8;
+        margin-left: auto;
+      }
+      button {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        background: #2563eb;
+        color: white;
+        font-size: 0.9rem;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      button.danger {
+        background: #dc2626;
+      }
+      button.ghost {
+        background: #1e293b;
+      }
+      label.toggle {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+      #errorMsg {
+        color: #f87171;
+        font-size: 0.8rem;
+      }
+
+      /* ── Idle : identité + bouton d'appel, pas de vidéo ── */
+      #idleControls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      /* ── Bandeau de sonnerie (appelant) ── */
+      #callingBanner {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding: 0.75rem 1rem;
+        background: #1e293b;
+        border-radius: 8px;
+      }
+      .pulse {
+        animation: pulse 1.2s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      /* ── Zone vidéo : visible uniquement pendant un appel ── */
+      #videoArea {
+        margin-bottom: 1rem;
+      }
+      .stage {
+        position: relative;
+        width: 640px;
+        max-width: 92vw;
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        aspect-ratio: 4 / 3;
+      }
+      #remoteVideo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #000;
+      }
+      #localVideo {
+        position: absolute;
+        right: 0.6rem;
+        bottom: 0.6rem;
+        width: 28%;
+        border-radius: 8px;
+        border: 2px solid #0f172a;
+        background: #1e293b;
+        object-fit: cover;
+        aspect-ratio: 4 / 3;
+      }
+      #videoArea .actions {
+        margin-top: 0.6rem;
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      /* ── Modal d'appel entrant (overlay HTML, jamais confirm()) ── */
+      #incomingModal {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.75);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+      }
+      #incomingModal[hidden] {
+        display: none;
+      }
+      .modal-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 14px;
+        padding: 1.5rem 2rem;
+        text-align: center;
+        max-width: 90vw;
+      }
+      .modal-card .ring {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+      }
+      .modal-card p {
+        margin: 0 0 1.2rem;
+        font-size: 1.1rem;
+      }
+      .modal-card .actions {
+        display: flex;
+        gap: 0.8rem;
+        justify-content: center;
+      }
+
+      pre#log {
+        background: #020617;
+        border: 1px solid #1e293b;
+        border-radius: 8px;
+        padding: 0.6rem;
+        height: 12rem;
+        overflow: auto;
+        font-size: 0.72rem;
+        line-height: 1.35;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .log-in {
+        color: #4ade80;
+      }
+      .log-out {
+        color: #60a5fa;
+      }
+      .log-err {
+        color: #f87171;
+      }
+      .log-sys {
+        color: #cbd5e1;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>try-a-call</h1>
+      <span id="identity">connexion…</span>
+      <span id="status">déconnecté</span>
+    </header>
+
+    <!-- IDLE : identité + bouton d'appel (aucune vidéo). Toujours visible ;
+         le bouton est désactivé tant que la connexion n'est pas établie. -->
+    <div id="idleControls">
+      <button id="callBtn" disabled>📞 Appeler</button>
+      <label class="toggle">
+        <input id="camToggle" type="checkbox" checked />
+        🎥 caméra
+      </label>
+      <span id="errorMsg"></span>
+    </div>
+
+    <!-- CALLING : sonnerie côté appelant -->
+    <div id="callingBanner" hidden>
+      <span class="pulse">📞 Sonnerie…</span>
+      <button id="cancelBtn" class="danger">Annuler</button>
+    </div>
+
+    <!-- IN-CALL : vidéo affichée uniquement pendant l'appel -->
+    <div id="videoArea" hidden>
+      <div class="stage">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <video id="localVideo" autoplay playsinline muted></video>
+      </div>
+      <div class="actions">
+        <button id="micBtn" class="ghost">🎤 Couper le micro</button>
+        <button id="camBtn" class="ghost">📷 Couper la caméra</button>
+        <button id="hangupBtn" class="danger">📕 Raccrocher</button>
+      </div>
+    </div>
+
+    <pre id="log"></pre>
+
+    <!-- MODAL : appel entrant -->
+    <div id="incomingModal" hidden>
+      <div class="modal-card">
+        <div class="ring pulse">📞</div>
+        <p id="incomingText">Appel entrant…</p>
+        <div class="actions">
+          <button id="acceptBtn">✅ Accepter</button>
+          <button id="declineBtn" class="ghost">🚫 Refuser</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Identité fixe injectée par le conteneur -->
+    <script src="config.js"></script>
+    <!-- socket.io-client 4.x (compatible avec socket.io ^4.8 côté serveur) -->
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
+    <script>
+      // ---- Identité (depuis config.js, injecté par le conteneur) -----------
+      const CONFIG = window.CONFIG ?? {
+        userId: 1,
+        peerId: 2,
+        conversationId: 1,
+        serverUrl: 'ws://localhost:3000',
+      };
+      const NAMES = {
+        1: 'Alice',
+        2: 'Bob',
+        3: 'Clara',
+        4: 'David',
+        5: 'Emma',
+        6: 'Florian',
+      };
+      const nameFor = (id) =>
+        NAMES[id] ? `${NAMES[id]} (User ${id})` : `User ${id}`;
+
+      // ---- État au niveau module ------------------------------------------
+      let socket = null;
+      let pc = null;
+      let localStream = null;
+      let currentCallId = null;
+      let pendingIce = [];
+
+      const $ = (id) => document.getElementById(id);
+      const els = {
+        identity: $('identity'),
+        status: $('status'),
+        idleControls: $('idleControls'),
+        callBtn: $('callBtn'),
+        camToggle: $('camToggle'),
+        callingBanner: $('callingBanner'),
+        cancelBtn: $('cancelBtn'),
+        videoArea: $('videoArea'),
+        micBtn: $('micBtn'),
+        camBtn: $('camBtn'),
+        hangupBtn: $('hangupBtn'),
+        localVideo: $('localVideo'),
+        remoteVideo: $('remoteVideo'),
+        incomingModal: $('incomingModal'),
+        incomingText: $('incomingText'),
+        acceptBtn: $('acceptBtn'),
+        declineBtn: $('declineBtn'),
+        errorMsg: $('errorMsg'),
+        log: $('log'),
+      };
+
+      // ---- Vues : idle / calling / incall ---------------------------------
+      // idleControls reste visible sauf pendant un appel (calling/incall).
+      function setView(state) {
+        els.idleControls.hidden = state === 'calling' || state === 'incall';
+        els.callingBanner.hidden = state !== 'calling';
+        els.videoArea.hidden = state !== 'incall';
+        if (state === 'incall') syncMediaButtons();
+      }
+      // Aligne les libellés/états des boutons micro & caméra sur les pistes réelles.
+      function syncMediaButtons() {
+        const audio = localStream?.getAudioTracks?.()[0];
+        const video = localStream?.getVideoTracks?.()[0];
+        els.micBtn.disabled = !audio;
+        els.micBtn.textContent =
+          audio && !audio.enabled ? '🔇 Activer le micro' : '🎤 Couper le micro';
+        // Pas de piste vidéo (appel audio) → bouton caméra masqué.
+        els.camBtn.hidden = !video;
+        if (video) {
+          els.camBtn.textContent = video.enabled
+            ? '📷 Couper la caméra'
+            : '📷 Activer la caméra';
+        }
+      }
+      function showError(msg) {
+        els.errorMsg.textContent = msg;
+      }
+      function clearError() {
+        els.errorMsg.textContent = '';
+      }
+      function showIncoming(text) {
+        els.incomingText.textContent = text;
+        els.incomingModal.hidden = false;
+      }
+      function hideIncoming() {
+        els.incomingModal.hidden = true;
+      }
+
+      // ---- Journal ---------------------------------------------------------
+      function log(message, kind = 'sys', data) {
+        const ts = new Date().toLocaleTimeString();
+        const line = document.createElement('div');
+        line.className = `log-${kind}`;
+        let text = `[${ts}] ${message}`;
+        if (data !== undefined) text += ' ' + JSON.stringify(data);
+        line.textContent = text;
+        els.log.appendChild(line);
+        els.log.scrollTop = els.log.scrollHeight;
+      }
+
+      function setCallId(id) {
+        currentCallId = id;
+      }
+
+      // ---- Média & peer (logique de signalisation inchangée) --------------
+      async function ensureLocalMedia() {
+        if (localStream) return localStream;
+        // getUserMedia exige un contexte sécurisé (http://localhost ou https).
+        localStream = await navigator.mediaDevices.getUserMedia({
+          video: els.camToggle.checked,
+          audio: true,
+        });
+        els.localVideo.srcObject = localStream;
+        log('média local acquis (getUserMedia)', 'sys');
+        return localStream;
+      }
+
+      function createPeer() {
+        closePeer();
+        pc = new RTCPeerConnection({
+          iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+        });
+        localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+        // Sans caméra locale, on négocie tout de même la RÉCEPTION vidéo : ainsi
+        // une ligne vidéo existe dans le SDP et le pair dont la caméra est allumée
+        // peut nous envoyer son flux (même appelant sans caméra).
+        if (localStream.getVideoTracks().length === 0) {
+          pc.addTransceiver('video', { direction: 'recvonly' });
+        }
+        pc.ontrack = (e) => {
+          els.remoteVideo.srcObject = e.streams[0];
+          log('piste distante reçue (ontrack)', 'in');
+        };
+        pc.onicecandidate = (e) => {
+          if (e.candidate && currentCallId != null) {
+            socket.emit('signal:ice', {
+              callId: currentCallId,
+              candidate: e.candidate,
+            });
+          }
+        };
+        pc.onconnectionstatechange = () => {
+          log(`pc.connectionState = ${pc.connectionState}`, 'sys');
+        };
+        pendingIce = [];
+        return pc;
+      }
+
+      function closePeer() {
+        if (pc) {
+          pc.close();
+          pc = null;
+        }
+        pendingIce = [];
+        els.remoteVideo.srcObject = null;
+      }
+
+      async function flushIce() {
+        for (const c of pendingIce) {
+          try {
+            await pc.addIceCandidate(c);
+          } catch (err) {
+            log('addIceCandidate (buffered) a échoué', 'err', String(err));
+          }
+        }
+        if (pendingIce.length)
+          log(`${pendingIce.length} candidat(s) ICE rejoué(s)`, 'sys');
+        pendingIce = [];
+      }
+
+      // ---- Appelant : crée et envoie l'offre (statut ACTIVE) ---------------
+      async function sendOffer() {
+        await ensureLocalMedia();
+        createPeer();
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socket.emit('signal:offer', { callId: currentCallId, sdp: offer });
+        log('signal:offer émis', 'out');
+      }
+
+      // ---- Connexion & écouteurs ------------------------------------------
+      function connect() {
+        // Pas de schéma ws:// ni de transports forcés : socket.io choisit
+        // polling→websocket, ce qui est le plus robuste en navigateur.
+        socket = io(`${CONFIG.serverUrl}/call`, {
+          auth: { userId: CONFIG.userId },
+        });
+
+        socket.on('connect', () => {
+          els.status.textContent = 'connecté';
+          els.callBtn.disabled = false;
+          clearError();
+          log(`connecté au namespace /call (userId=${CONFIG.userId})`, 'sys');
+          setView('idle');
+        });
+        socket.on('disconnect', (reason) => {
+          els.status.textContent = 'déconnecté';
+          els.callBtn.disabled = true;
+          log(`déconnecté: ${reason}`, 'err');
+          closePeer();
+          hideIncoming();
+          setView('idle');
+        });
+        socket.on('connect_error', (err) => {
+          els.status.textContent = 'erreur';
+          els.callBtn.disabled = true;
+          log('connect_error', 'err', err.message);
+          showError(
+            `Connexion impossible (${err.message}). Le backend tourne-t-il sur ${CONFIG.serverUrl} ?`,
+          );
+        });
+
+        // --- Notifications de cycle de vie ---
+        socket.on('call:incoming', (p) => {
+          setCallId(p.callId);
+          const who = p.callerName ?? nameFor(p.callerId);
+          log(`call:incoming de « ${who} » (${p.type})`, 'in', p);
+          showIncoming(`${who} vous appelle…`);
+        });
+        socket.on('call:accepted', async (p) => {
+          log("call:accepted — création de l'offre", 'in', p);
+          setView('incall');
+          await sendOffer();
+        });
+        socket.on('call:declined', (p) => {
+          log('call:declined', 'in', p);
+          closePeer();
+          setCallId(null);
+          setView('idle');
+        });
+        socket.on('call:missed', (p) => {
+          log('call:missed (timeout sonnerie)', 'in', p);
+          closePeer();
+          setCallId(null);
+          hideIncoming();
+          setView('idle');
+        });
+        socket.on('call:ended', (p) => {
+          log(`call:ended (reason=${p.reason})`, 'in', p);
+          closePeer();
+          setCallId(null);
+          hideIncoming();
+          setView('idle');
+        });
+
+        // --- Relais WebRTC ---
+        socket.on('signal:offer', async (p) => {
+          log('signal:offer reçu', 'in');
+          setCallId(p.callId);
+          await ensureLocalMedia();
+          if (!pc) createPeer();
+          await pc.setRemoteDescription(p.sdp);
+          await flushIce();
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          socket.emit('signal:answer', { callId: p.callId, sdp: answer });
+          log('signal:answer émis', 'out');
+        });
+        socket.on('signal:answer', async (p) => {
+          log('signal:answer reçu', 'in');
+          await pc.setRemoteDescription(p.sdp);
+          await flushIce();
+        });
+        socket.on('signal:ice', async (p) => {
+          if (pc && pc.remoteDescription) {
+            try {
+              await pc.addIceCandidate(p.candidate);
+            } catch (err) {
+              log('addIceCandidate a échoué', 'err', String(err));
+            }
+          } else {
+            pendingIce.push(p.candidate); // rejoué après setRemoteDescription
+          }
+        });
+      }
+
+      // ---- Boutons --------------------------------------------------------
+      els.callBtn.onclick = async () => {
+        clearError();
+        try {
+          await ensureLocalMedia(); // acquérir la caméra avant l'offre
+        } catch (err) {
+          log('getUserMedia a échoué', 'err', String(err));
+          showError('Accès caméra/micro refusé ou indisponible.');
+          return;
+        }
+        const payload = {
+          conversationId: CONFIG.conversationId,
+          type: els.camToggle.checked ? 'video' : 'audio',
+        };
+        socket.emit('call:initiate', payload, (res) => {
+          if (res && res.error) {
+            // Échec serveur (conversation absente, appel déjà en cours…) :
+            // on reste en idle et on affiche l'erreur — pas de sonnerie qui flashe.
+            log('call:initiate → erreur', 'err', res.error);
+            showError(res.error);
+            return;
+          }
+          setCallId(res.id);
+          log('call:initiate → ok', 'in', res);
+          // La sonnerie n'apparaît qu'une fois l'appel créé côté serveur (RINGING).
+          setView('calling');
+        });
+        log('call:initiate émis', 'out', payload);
+      };
+
+      els.acceptBtn.onclick = async () => {
+        hideIncoming();
+        try {
+          await ensureLocalMedia();
+        } catch (err) {
+          log('getUserMedia a échoué', 'err', String(err));
+          return;
+        }
+        createPeer(); // prêt à recevoir l'offre de l'appelant
+        socket.emit('call:accept', { callId: currentCallId }, (res) => {
+          if (res && res.error) log('call:accept → erreur', 'err', res.error);
+          else log('call:accept → ok', 'in', res);
+        });
+        log('call:accept émis', 'out');
+        setView('incall');
+      };
+
+      els.declineBtn.onclick = () => {
+        hideIncoming();
+        socket.emit('call:decline', { callId: currentCallId }, (res) => {
+          if (res && res.error) log('call:decline → erreur', 'err', res.error);
+          else log('call:decline → ok', 'in', res);
+        });
+        log('call:decline émis', 'out');
+        setView('idle');
+      };
+
+      const hangup = () => {
+        socket.emit('call:hangup', { callId: currentCallId }, (res) => {
+          if (res && res.error) log('call:hangup → erreur', 'err', res.error);
+          else log('call:hangup → ok', 'in', res);
+        });
+        log('call:hangup émis', 'out');
+        closePeer();
+        setCallId(null);
+        setView('idle');
+      };
+      els.hangupBtn.onclick = hangup; // raccrocher pendant l'appel
+      els.cancelBtn.onclick = hangup; // annuler pendant la sonnerie (RINGING)
+
+      // Mute/unmute : on bascule track.enabled (aucune renégociation WebRTC).
+      els.micBtn.onclick = () => {
+        const track = localStream?.getAudioTracks?.()[0];
+        if (!track) return;
+        track.enabled = !track.enabled;
+        log(`micro ${track.enabled ? 'activé' : 'coupé'}`, 'sys');
+        syncMediaButtons();
+      };
+      els.camBtn.onclick = () => {
+        const track = localStream?.getVideoTracks?.()[0];
+        if (!track) return;
+        track.enabled = !track.enabled;
+        log(`caméra ${track.enabled ? 'activée' : 'coupée'}`, 'sys');
+        syncMediaButtons();
+      };
+
+      // ---- Démarrage : identité fixe + connexion automatique ---------------
+      els.identity.textContent = `${nameFor(CONFIG.userId)}`;
+      els.callBtn.textContent = `📞 Appeler ${nameFor(CONFIG.peerId)}`;
+      log(`Identité fixe : ${nameFor(CONFIG.userId)}. Connexion…`, 'sys');
+      connect();
+    </script>
+  </body>
+</html>

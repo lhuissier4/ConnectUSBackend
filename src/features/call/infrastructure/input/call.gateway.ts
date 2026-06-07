@@ -110,11 +110,19 @@ export class CallGateway implements OnGatewayConnection {
     if (userId === undefined) {
       return { error: 'Utilisateur non identifié.' };
     }
+    // Le contrat du fil accepte « video »/« audio » (casse libre) ; on traduit
+    // vers l'enum de domaine (VIDEO/AUDIO) avant de toucher la persistance.
+    const type = this.parseCallType(payload.type);
+    if (type === null) {
+      return {
+        error: `Type d'appel invalide : « ${String(payload.type)} » (attendu « video » ou « audio »).`,
+      };
+    }
     try {
       const call = await this.initiateCallUseCase.execute(
         userId,
         payload.conversationId,
-        payload.type,
+        type,
       );
       const callerName = await this.userLookup.findDisplayName(userId);
 
@@ -393,6 +401,14 @@ export class CallGateway implements OnGatewayConnection {
         previousStatus,
       ),
     );
+  }
+
+  /** Normalise le type reçu sur le fil (casse libre) vers l'enum CallType, ou null. */
+  private parseCallType(raw: unknown): CallType | null {
+    const value = String(raw).toUpperCase();
+    return (Object.values(CallType) as string[]).includes(value)
+      ? (value as CallType)
+      : null;
   }
 
   private toError(error: unknown): { error: string } {
